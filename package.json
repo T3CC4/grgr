@@ -1,0 +1,40 @@
+{
+  "name": "discord-bot-dashboard",
+  "version": "1.0.0",
+  "description": "Discord Bot mit Web Dashboard",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js",
+    "dev": "npm run dev:concurrent",
+    "dev:concurrent": "concurrently \"npm run dev:bot\" \"npm run dev:dashboard\"",
+    "dev:bot": "nodemon bot.js",
+    "dev:dashboard": "nodemon dashboard/server.js",
+    "bot": "node bot.js",
+    "dashboard": "node dashboard/server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:delete": "pm2 delete ecosystem.config.js"
+  },
+  "keywords": ["discord", "bot", "dashboard"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "passport": "^0.7.0",
+    "passport-discord": "^0.1.4",
+    "sqlite3": "^5.1.6",
+    "ejs": "^3.1.9",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
