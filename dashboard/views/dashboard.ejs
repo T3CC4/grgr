@@ -1,240 +1,60 @@
-<!-- dashboard/views/dashboard.ejs -->
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Discord Bot</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-    <style>
-        .server-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: none;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        .server-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        }
-        .server-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .badge-bot-status {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-        .navbar {
-            background: rgba(255, 255, 255, 0.95) !important;
-            backdrop-filter: blur(10px);
-        }
-    </style>
-</head>
-<body class="bg-light">
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/">
-                <i class="bi bi-robot"></i> Discord Bot
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/dashboard">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" 
-                                 alt="Avatar" width="24" height="24" class="rounded-circle me-1">
-                            <%= user.username %>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/dashboard">Dashboard</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout">Logout</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<%- include('partials/header', { title: 'Dashboard - Discord Bot' }) %>
+<%- include('partials/navbar', { user: user, activeTab: 'dashboard' }) %>
 
-    <!-- Main Content -->
-    <div class="container mt-4">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col">
-                <h1 class="display-6">Willkommen zurück, <%= user.username %>!</h1>
-                <p class="lead text-muted">Verwalte deine Discord Server mit dem Bot Dashboard</p>
-            </div>
-        </div>
-
-        <!-- Statistics Cards -->
-        <div class="row mb-5">
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <i class="bi bi-servers text-primary fs-1"></i>
-                        <h5 class="card-title mt-2"><%= guilds.length %></h5>
-                        <p class="card-text text-muted">Verwaltbare Server</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <i class="bi bi-robot text-success fs-1"></i>
-                        <h5 class="card-title mt-2"><%= guilds.filter(g => g.botInGuild).length %></h5>
-                        <p class="card-text text-muted">Bot aktiv</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <i class="bi bi-people text-info fs-1"></i>
-                        <h5 class="card-title mt-2">-</h5>
-                        <p class="card-text text-muted">Gesamt Mitglieder</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <i class="bi bi-activity text-warning fs-1"></i>
-                        <h5 class="card-title mt-2">Online</h5>
-                        <p class="card-text text-muted">Bot Status</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Server Selection -->
-        <div class="row">
-            <div class="col">
-                <h3 class="mb-4">Deine Server</h3>
-                
-                <% if (guilds.length === 0) { %>
-                    <div class="text-center py-5">
-                        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
-                        <h4 class="text-muted mt-3">Keine verwaltbaren Server gefunden</h4>
-                        <p class="text-muted">Du benötigst "Server verwalten" Berechtigung um Server hier zu sehen.</p>
-                    </div>
-                <% } else { %>
-                    <div class="row g-4">
-                        <% guilds.forEach(guild => { %>
-                            <div class="col-md-6 col-lg-4">
-                                <div class="card server-card h-100 position-relative">
-                                    <% if (guild.botInGuild) { %>
-                                        <span class="badge bg-success badge-bot-status">
-                                            <i class="bi bi-check-circle"></i> Bot aktiv
-                                        </span>
-                                    <% } else { %>
-                                        <span class="badge bg-secondary badge-bot-status">
-                                            <i class="bi bi-x-circle"></i> Bot nicht aktiv
-                                        </span>
-                                    <% } %>
-                                    
-                                    <div class="card-body text-center">
-                                        <% if (guild.icon) { %>
-                                            <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" 
-                                                 alt="<%= guild.name %>" class="server-icon mb-3">
-                                        <% } else { %>
-                                            <div class="server-icon bg-primary d-flex align-items-center justify-content-center mb-3 mx-auto">
-                                                <span class="text-white fw-bold fs-4"><%= guild.name.charAt(0) %></span>
-                                            </div>
-                                        <% } %>
-                                        
-                                        <h5 class="card-title"><%= guild.name %></h5>
-                                        <p class="card-text text-muted small">
-                                            ID: <%= guild.id %>
-                                        </p>
-                                        
-                                        <div class="d-grid gap-2">
-                                            <% if (guild.botInGuild) { %>
-                                                <a href="/dashboard/<%= guild.id %>" class="btn btn-primary">
-                                                    <i class="bi bi-gear"></i> Verwalten
-                                                </a>
-                                            <% } else { %>
-                                                <a href="<%= botInviteURL %><%= guild.id %>" 
-                                                   class="btn btn-success" target="_blank">
-                                                    <i class="bi bi-plus-circle"></i> Bot hinzufügen
-                                                </a>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <% }); %>
-                    </div>
-                <% } %>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="row mt-5">
-            <div class="col">
-                <h3 class="mb-4">Quick Actions</h3>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <i class="bi bi-plus-circle text-primary fs-1"></i>
-                                <h5 class="card-title mt-2">Bot einladen</h5>
-                                <p class="card-text text-muted">Lade den Bot zu einem neuen Server ein</p>
-                                <a href="<%= botInviteURL %>" class="btn btn-primary btn-sm" target="_blank">
-                                    Einladen
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <i class="bi bi-book text-info fs-1"></i>
-                                <h5 class="card-title mt-2">Dokumentation</h5>
-                                <p class="card-text text-muted">Lerne wie du den Bot optimal nutzt</p>
-                                <a href="#" class="btn btn-info btn-sm">
-                                    Docs öffnen
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <i class="bi bi-headset text-success fs-1"></i>
-                                <h5 class="card-title mt-2">Support</h5>
-                                <p class="card-text text-muted">Brauchst du Hilfe? Kontaktiere uns</p>
-                                <a href="#" class="btn btn-success btn-sm">
-                                    Support Server
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-6">Welcome back, <%= user.username %>!</h1>
+            <p class="lead text-muted">Manage your Discord servers with the bot dashboard</p>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container text-center">
-            <p>&copy; 2024 Discord Bot Dashboard. Made with ❤️</p>
-        </div>
-    </footer>
+    <%- include('partials/alert', { message: message, messageType: messageType }) %>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    <!-- Statistics Cards -->
+    <div class="row mb-5">
+        <% const stats = [
+            { icon: 'bi-servers', color: 'primary', value: guilds.length, label: 'Manageable Servers' },
+            { icon: 'bi-robot', color: 'success', value: guilds.filter(g => g.botInGuild).length, label: 'Bot Active' },
+            { icon: 'bi-people', color: 'info', value: totalMembers || '-', label: 'Total Members' },
+            { icon: 'bi-activity', color: 'warning', value: 'Online', label: 'Bot Status' }
+        ] %>
+        <% stats.forEach(stat => { %>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi <%= stat.icon %> text-<%= stat.color %> fs-1"></i>
+                        <h5 class="card-title mt-2"><%= stat.value %></h5>
+                        <p class="card-text text-muted"><%= stat.label %></p>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+    <!-- Server Selection -->
+    <div class="row">
+        <div class="col">
+            <h3 class="mb-4">Your Servers</h3>
+            
+            <% if (guilds.length === 0) { %>
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="text-muted mt-3">No manageable servers found</h4>
+                    <p class="text-muted">You need "Manage Server" permission to see servers here.</p>
+                </div>
+            <% } else { %>
+                <div class="row g-4">
+                    <% guilds.forEach(guild => { %>
+                        <div class="col-md-6 col-lg-4">
+                            <%- include('partials/guild-card', { guild: guild, botInviteURL: botInviteURL }) %>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer', { botInviteURL: botInviteURL }) %>

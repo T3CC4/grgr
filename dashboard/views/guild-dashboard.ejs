@@ -1,320 +1,67 @@
-<!-- dashboard/views/guild-dashboard.ejs -->
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= guild.name %> - Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-    <style>
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            background: #f8f9fa;
-            border-right: 1px solid #dee2e6;
-        }
-        .nav-link {
-            color: #495057;
-        }
-        .nav-link:hover, .nav-link.active {
-            background-color: #e9ecef;
-            color: #495057;
-        }
-        .form-floating label {
-            color: #6c757d;
-        }
-        .guild-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="/dashboard">
-                <i class="bi bi-arrow-left"></i> Zurück
-            </a>
-            <div class="d-flex align-items-center">
-                <% if (guild.icon) { %>
-                    <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" 
-                         alt="<%= guild.name %>" class="guild-icon me-2">
-                <% } %>
-                <span class="fw-bold"><%= guild.name %></span>
-            </div>
-            <div class="dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                    <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" 
-                         alt="Avatar" width="24" height="24" class="rounded-circle me-1">
-                    <%= user.username %>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/dashboard">Dashboard</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="/logout">Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<%- include('partials/header', { 
+    title: guild.name + ' - Dashboard',
+    styles: '<style>.sidebar { min-height: calc(100vh - 56px); background: #f8f9fa; } .guild-icon-large { width: 80px; height: 80px; border-radius: 50%; }</style>'
+}) %>
 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block sidebar">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#general" data-tab="general">
-                                <i class="bi bi-gear"></i> Allgemein
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#welcome" data-tab="welcome">
-                                <i class="bi bi-door-open"></i> Willkommen
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#moderation" data-tab="moderation">
-                                <i class="bi bi-shield"></i> Moderation
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#autorole" data-tab="autorole">
-                                <i class="bi bi-person-plus"></i> Auto-Rolle
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#music" data-tab="music">
-                                <i class="bi bi-music-note"></i> Musik
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#commands" data-tab="commands">
-                                <i class="bi bi-terminal"></i> Commands
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+<%- include('partials/navbar', { user: user, activeTab: 'dashboard', fluid: true }) %>
 
-            <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div class="pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Server Konfiguration</h1>
-                    <p class="text-muted">Konfiguriere den Bot für <strong><%= guild.name %></strong></p>
-                </div>
-
-                <!-- Alert for save status -->
-                <div id="alertContainer"></div>
-
-                <!-- Tab Content -->
-                <div id="general" class="tab-content active">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="bi bi-gear"></i> Allgemeine Einstellungen</h5>
-                        </div>
-                        <div class="card-body">
-                            <form id="generalForm">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-floating mb-3">
-                                            <input type="text" class="form-control" id="prefix" 
-                                                   value="<%= config.prefix %>" placeholder="Bot Prefix">
-                                            <label for="prefix">Bot Prefix</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-check form-switch mt-3">
-                                            <input class="form-check-input" type="checkbox" id="musicEnabled" 
-                                                   <%= config.musicEnabled ? 'checked' : '' %>>
-                                            <label class="form-check-label" for="musicEnabled">
-                                                Musik Modul aktiviert
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle"></i> Speichern
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="welcome" class="tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="bi bi-door-open"></i> Willkommens-System</h5>
-                        </div>
-                        <div class="card-body">
-                            <form id="welcomeForm">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-floating mb-3">
-                                            <select class="form-select" id="welcomeChannel">
-                                                <option value="">Deaktiviert</option>
-                                            </select>
-                                            <label for="welcomeChannel">Willkommens-Channel</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <textarea class="form-control" id="welcomeMessage" 
-                                              style="height: 100px" placeholder="Willkommens-Nachricht"><%= config.welcomeMessage %></textarea>
-                                    <label for="welcomeMessage">Willkommens-Nachricht</label>
-                                    <div class="form-text">
-                                        Verfügbare Platzhalter: {user}, {server}, {memberCount}
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle"></i> Speichern
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="moderation" class="tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="bi bi-shield"></i> Moderations-Einstellungen</h5>
-                        </div>
-                        <div class="card-body">
-                            <form id="moderationForm">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-floating mb-3">
-                                            <select class="form-select" id="modLogChannel">
-                                                <option value="">Deaktiviert</option>
-                                            </select>
-                                            <label for="modLogChannel">Moderations-Log Channel</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-check form-switch mt-3">
-                                            <input class="form-check-input" type="checkbox" id="moderationEnabled" 
-                                                   <%= config.moderationEnabled ? 'checked' : '' %>>
-                                            <label class="form-check-label" for="moderationEnabled">
-                                                Moderation aktiviert
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle"></i> Speichern
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="autorole" class="tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="bi bi-person-plus"></i> Auto-Rolle</h5>
-                        </div>
-                        <div class="card-body">
-                            <form id="autoroleForm">
-                                <div class="form-floating mb-3">
-                                    <select class="form-select" id="autoRole">
-                                        <option value="">Deaktiviert</option>
-                                    </select>
-                                    <label for="autoRole">Auto-Rolle für neue Mitglieder</label>
-                                </div>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-check-circle"></i> Speichern
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="music" class="tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="bi bi-music-note"></i> Musik-Einstellungen</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i>
-                                Musik-Features sind aktuell in Entwicklung und werden bald verfügbar sein.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="commands" class="tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="bi bi-terminal"></i> Command-Übersicht</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6>Utility Commands</h6>
-                                    <ul class="list-unstyled">
-                                        <li><code>/ping</code> - Bot Latenz</li>
-                                        <li><code>/help</code> - Command Liste</li>
-                                        <li><code>/userinfo</code> - User Info</li>
-                                        <li><code>/serverinfo</code> - Server Info</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6>Moderation Commands</h6>
-                                    <ul class="list-unstyled">
-                                        <li><code>/kick</code> - User kicken</li>
-                                        <li><code>/ban</code> - User bannen</li>
-                                        <li><code>/warn</code> - User verwarnen</li>
-                                        <li><code>/clear</code> - Nachrichten löschen</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Tab switching
-        document.querySelectorAll('[data-tab]').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                // Remove active from all tabs and content
-                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-                
-                // Add active to clicked tab
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-            });
-        });
-
-        // Load channels and roles on page load
-        const guildId = '<%= guild.id %>';
+<div class="container-fluid">
+    <div class="row">
+        <%- include('partials/guild-sidebar', { 
+            guild: guild, 
+            activeSection: typeof activeSection !== 'undefined' ? activeSection : 'general' 
+        }) %>
         
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Server Configuration</h1>
+                <p class="text-muted">Configure the bot for <strong><%= guild.name %></strong></p>
+            </div>
+
+            <!-- Alert for save status -->
+            <div id="alertContainer"></div>
+
+            <!-- Dynamic content based on section -->
+            <% if (typeof section !== 'undefined') { %>
+                <%- include('sections/' + section, { guild: guild, config: config, commands: commands }) %>
+            <% } else { %>
+                <%- include('sections/general', { guild: guild, config: config }) %>
+            <% } %>
+        </main>
+    </div>
+</div>
+
+<%- include('partials/footer', {
+    scripts: `
+    <script>
+        const guildId = '${guild.id}';
+        
+        // Load channels and roles on page load
         async function loadChannels() {
             try {
-                const response = await fetch(`/api/guild/${guildId}/channels`);
+                const response = await fetch(\`/api/guild/\${guildId}/channels\`);
                 const channels = await response.json();
                 
-                const selects = ['welcomeChannel', 'modLogChannel'];
-                selects.forEach(selectId => {
-                    const select = document.getElementById(selectId);
+                const selects = document.querySelectorAll('.channel-select');
+                selects.forEach(select => {
+                    select.innerHTML = '<option value="">Disabled</option>';
                     channels.forEach(channel => {
-                        if (channel.type === 0) { // Text channels only
-                            const option = document.createElement('option');
-                            option.value = channel.id;
-                            option.textContent = `# ${channel.name}`;
-                            select.appendChild(option);
-                        }
+                        const option = document.createElement('option');
+                        option.value = channel.id;
+                        option.textContent = \`# \${channel.name}\`;
+                        if (channel.parent) option.textContent += \` (\${channel.parent})\`;
+                        select.appendChild(option);
                     });
                 });
+                
+                // Set current values
+                if (document.getElementById('welcomeChannel')) {
+                    document.getElementById('welcomeChannel').value = '${config.welcomeChannel || ""}';
+                }
+                if (document.getElementById('modLogChannel')) {
+                    document.getElementById('modLogChannel').value = '${config.modLogChannel || ""}';
+                }
             } catch (error) {
                 console.error('Error loading channels:', error);
             }
@@ -322,58 +69,46 @@
 
         async function loadRoles() {
             try {
-                const response = await fetch(`/api/guild/${guildId}/roles`);
+                const response = await fetch(\`/api/guild/\${guildId}/roles\`);
                 const roles = await response.json();
                 
-                const select = document.getElementById('autoRole');
-                roles.forEach(role => {
-                    if (role.name !== '@everyone') {
+                const selects = document.querySelectorAll('.role-select');
+                selects.forEach(select => {
+                    select.innerHTML = '<option value="">Disabled</option>';
+                    roles.forEach(role => {
                         const option = document.createElement('option');
                         option.value = role.id;
                         option.textContent = role.name;
+                        option.style.color = role.color;
                         select.appendChild(option);
-                    }
+                    });
                 });
+                
+                // Set current value
+                if (document.getElementById('autoRole')) {
+                    document.getElementById('autoRole').value = '${config.autoRole || ""}';
+                }
             } catch (error) {
                 console.error('Error loading roles:', error);
             }
         }
 
-        // Form submission handlers
-        document.getElementById('generalForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await saveConfig({
-                prefix: document.getElementById('prefix').value,
-                musicEnabled: document.getElementById('musicEnabled').checked
+        // Save configuration
+        async function saveConfig(formId) {
+            const form = document.getElementById(formId);
+            const formData = new FormData(form);
+            const config = {};
+            
+            formData.forEach((value, key) => {
+                if (form.elements[key].type === 'checkbox') {
+                    config[key] = form.elements[key].checked;
+                } else {
+                    config[key] = value;
+                }
             });
-        });
-
-        document.getElementById('welcomeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await saveConfig({
-                welcomeChannel: document.getElementById('welcomeChannel').value,
-                welcomeMessage: document.getElementById('welcomeMessage').value
-            });
-        });
-
-        document.getElementById('moderationForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await saveConfig({
-                modLogChannel: document.getElementById('modLogChannel').value,
-                moderationEnabled: document.getElementById('moderationEnabled').checked
-            });
-        });
-
-        document.getElementById('autoroleForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await saveConfig({
-                autoRole: document.getElementById('autoRole').value
-            });
-        });
-
-        async function saveConfig(config) {
+            
             try {
-                const response = await fetch(`/api/guild/${guildId}/config`, {
+                const response = await fetch(\`/api/guild/\${guildId}/config\`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -386,10 +121,10 @@
                 if (result.success) {
                     showAlert('success', result.message);
                 } else {
-                    showAlert('danger', result.error || 'Fehler beim Speichern');
+                    showAlert('danger', result.error || 'Error saving configuration');
                 }
             } catch (error) {
-                showAlert('danger', 'Fehler beim Speichern der Konfiguration');
+                showAlert('danger', 'Error saving configuration');
                 console.error('Save error:', error);
             }
         }
@@ -397,11 +132,11 @@
         function showAlert(type, message) {
             const alertContainer = document.getElementById('alertContainer');
             const alert = document.createElement('div');
-            alert.className = `alert alert-${type} alert-dismissible fade show`;
-            alert.innerHTML = `
-                ${message}
+            alert.className = \`alert alert-\${type} alert-dismissible fade show\`;
+            alert.innerHTML = \`
+                \${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
+            \`;
             alertContainer.appendChild(alert);
             
             setTimeout(() => {
@@ -409,9 +144,17 @@
             }, 5000);
         }
 
+        // Attach save handlers to forms
+        document.querySelectorAll('form[data-config-form]').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveConfig(form.id);
+            });
+        });
+
         // Load data on page load
         loadChannels();
         loadRoles();
     </script>
-</body>
-</html>
+    `
+}) %>

@@ -1,0 +1,65 @@
+<nav class="col-md-3 col-lg-2 d-md-block sidebar">
+    <div class="position-sticky pt-3">
+        <div class="text-center mb-4">
+            <% if (guild.icon) { %>
+                <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" 
+                     alt="<%= guild.name %>" class="guild-icon-large mb-2">
+            <% } else { %>
+                <div class="guild-icon-large bg-primary d-flex align-items-center justify-content-center mb-2 mx-auto">
+                    <span class="text-white fw-bold fs-3"><%= guild.name.charAt(0) %></span>
+                </div>
+            <% } %>
+            <h6><%= guild.name %></h6>
+        </div>
+        
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link <%= activeSection === 'overview' ? 'active' : '' %>" href="/dashboard/<%= guild.id %>">
+                    <i class="bi bi-house"></i> Overview
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <%= activeSection === 'general' ? 'active' : '' %>" href="/dashboard/<%= guild.id %>/general">
+                    <i class="bi bi-gear"></i> General
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <%= activeSection === 'welcome' ? 'active' : '' %>" href="/dashboard/<%= guild.id %>/welcome">
+                    <i class="bi bi-door-open"></i> Welcome
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <%= activeSection === 'moderation' ? 'active' : '' %>" href="/dashboard/<%= guild.id %>/moderation">
+                    <i class="bi bi-shield"></i> Moderation
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <%= activeSection === 'autorole' ? 'active' : '' %>" href="/dashboard/<%= guild.id %>/autorole">
+                    <i class="bi bi-person-plus"></i> Auto-Role
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <%= activeSection === 'commands' ? 'active' : '' %>" href="/dashboard/<%= guild.id %>/commands">
+                    <i class="bi bi-terminal"></i> Commands
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <%= activeSection === 'custom' ? 'active' : '' %>" href="/dashboard/<%= guild.id %>/custom">
+                    <i class="bi bi-code-slash"></i> Custom Commands
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <%= activeSection === 'logs' ? 'active' : '' %>" href="/dashboard/<%= guild.id %>/logs">
+                    <i class="bi bi-file-text"></i> Audit Logs
+                </a>
+            </li>
+        </ul>
+        
+        <hr>
+        
+        <div class="px-3">
+            <small class="text-muted">Guild ID</small>
+            <p class="small font-monospace"><%= guild.id %></p>
+        </div>
+    </div>
+</nav>

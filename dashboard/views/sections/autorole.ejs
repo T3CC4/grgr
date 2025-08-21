@@ -1,0 +1,43 @@
+<div class="card">
+    <div class="card-header">
+        <h5><i class="bi bi-person-plus"></i> Auto-Role System</h5>
+    </div>
+    <div class="card-body">
+        <form id="autoroleForm" data-config-form>
+            <div class="form-floating mb-3">
+                <select class="form-select role-select" id="autoRole" name="autoRole">
+                    <option value="">Disabled</option>
+                </select>
+                <label for="autoRole">Auto-Role for New Members</label>
+                <div class="form-text">This role will be automatically assigned to new members</div>
+            </div>
+            
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="skipBots" name="skipBots" checked>
+                <label class="form-check-label" for="skipBots">
+                    Skip bots (don't give auto-role to bots)
+                </label>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> Save Settings
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5><i class="bi bi-emoji-smile"></i> Reaction Roles</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">Set up reaction roles to allow users to self-assign roles by reacting to messages.</p>
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reactionRoleModal">
+            <i class="bi bi-plus-circle"></i> Create Reaction Role
+        </button>
+        
+        <div class="mt-3" id="reactionRolesList">
+            <!-- Reaction roles will be loaded here -->
+        </div>
+    </div>
+</div>

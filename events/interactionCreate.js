@@ -1,10 +1,9 @@
-// events/interactionCreate.js
+// events/interactionCreate.js - KORRIGIERT
 const { Events, Collection } = require('discord.js');
 
 module.exports = {
     name: Events.InteractionCreate,
     async execute(interaction, bot) {
-        const client = bot.client;
         // Slash Command Handler
         if (interaction.isChatInputCommand()) {
             const command = bot.commands.get(interaction.commandName);

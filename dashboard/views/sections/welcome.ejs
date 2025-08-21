@@ -1,0 +1,43 @@
+<div class="card">
+    <div class="card-header">
+        <h5><i class="bi bi-door-open"></i> Welcome System</h5>
+    </div>
+    <div class="card-body">
+        <form id="welcomeForm" data-config-form>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select channel-select" id="welcomeChannel" name="welcomeChannel">
+                            <option value="">Disabled</option>
+                        </select>
+                        <label for="welcomeChannel">Welcome Channel</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select channel-select" id="leaveChannel" name="leaveChannel">
+                            <option value="">Disabled</option>
+                        </select>
+                        <label for="leaveChannel">Leave Channel</label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="welcomeMessage" name="welcomeMessage"
+                          style="height: 100px" placeholder="Welcome Message"><%= config.welcomeMessage %></textarea>
+                <label for="welcomeMessage">Welcome Message</label>
+                <div class="form-text">
+                    Available placeholders: <code>{user}</code>, <code>{server}</code>, <code>{memberCount}</code>
+                </div>
+            </div>
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="leaveMessage" name="leaveMessage"
+                          style="height: 100px" placeholder="Leave Message"><%= config.leaveMessage || '{user} has left the server' %></textarea>
+                <label for="leaveMessage">Leave Message</label>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> Save Settings
+            </button>
+        </form>
+    </div>
+</div>
