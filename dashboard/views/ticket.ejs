@@ -1,0 +1,344 @@
+<!-- dashboard/views/ticket.ejs - Complete Individual Ticket View -->
+<%- include('partials/header', { title: 'Ticket ' + ticket.ticket_id + ' - Omnia Bot' }) %>
+<%- include('partials/navbar', { user: user, activeTab: 'support' }) %>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Ticket Header -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">
+                                <a href="/support" class="text-decoration-none">
+                                    <i class="bi bi-arrow-left"></i>
+                                </a>
+                                <%= ticket.subject %>
+                            </h5>
+                            <small class="text-muted">
+                                Ticket ID: <code><%= ticket.ticket_id %></code> | 
+                                Created by <%= ticket.username %> on <%= new Date(ticket.created_at).toLocaleString() %>
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge bg-<%= ticket.status === 'open' ? 'success' : ticket.status === 'in_progress' ? 'warning' : 'secondary' %>">
+                                <%= ticket.status.replace('_', ' ').toUpperCase() %>
+                            </span>
+                            <span class="badge bg-<%= ticket.priority === 'high' ? 'danger' : ticket.priority === 'normal' ? 'primary' : 'secondary' %>">
+                                <%= ticket.priority.toUpperCase() %>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Messages -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Conversation</h6>
+                </div>
+                <div class="card-body" style="max-height: 500px; overflow-y: auto;" id="messageContainer">
+                    <% ticket.messages.forEach((message, index) => { %>
+                        <div class="<%= message.is_staff ? 'text-end' : '' %> mb-3">
+                            <div class="d-inline-block <%= message.is_staff ? 'bg-primary text-white' : 'bg-light' %> p-3 rounded" style="max-width: 70%;">
+                                <div class="mb-2">
+                                    <strong>
+                                        <%= message.username %>
+                                        <% if (message.is_staff) { %>
+                                            <span class="badge bg-warning text-dark ms-1">Staff</span>
+                                        <% } %>
+                                    </strong>
+                                    <small class="<%= message.is_staff ? 'text-white-50' : 'text-muted' %> ms-2">
+                                        <%= new Date(message.created_at).toLocaleString() %>
+                                    </small>
+                                </div>
+                                <div style="white-space: pre-wrap;"><%= message.message %></div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+                
+                <!-- Reply Form -->
+                <% if (ticket.status !== 'closed') { %>
+                    <div class="card-footer">
+                        <form id="replyForm">
+                            <div class="input-group">
+                                <textarea class="form-control" id="replyMessage" rows="2" placeholder="Type your message..." required></textarea>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-send"></i> Send
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                <% } else { %>
+                    <div class="card-footer">
+                        <p class="text-muted text-center mb-0">
+                            <i class="bi bi-lock"></i> This ticket is closed
+                        </p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Ticket Info -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Ticket Information</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-<%= ticket.status === 'open' ? 'success' : ticket.status === 'in_progress' ? 'warning' : 'secondary' %>">
+                                <%= ticket.status.replace('_', ' ') %>
+                            </span>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Priority:</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-<%= ticket.priority === 'high' ? 'danger' : ticket.priority === 'normal' ? 'primary' : 'secondary' %>">
+                                <%= ticket.priority %>
+                            </span>
+                        </dd>
+                        
+                        <dt class="col-sm-4">Category:</dt>
+                        <dd class="col-sm-8"><%= ticket.category %></dd>
+                        
+                        <dt class="col-sm-4">Created:</dt>
+                        <dd class="col-sm-8"><%= new Date(ticket.created_at).toLocaleDateString() %></dd>
+                        
+                        <dt class="col-sm-4">Updated:</dt>
+                        <dd class="col-sm-8"><%= new Date(ticket.updated_at).toLocaleDateString() %></dd>
+                        
+                        <% if (ticket.assigned_to) { %>
+                            <dt class="col-sm-4">Assigned:</dt>
+                            <dd class="col-sm-8"><%= ticket.assigned_to %></dd>
+                        <% } %>
+                        
+                        <% if (ticket.closed_at) { %>
+                            <dt class="col-sm-4">Closed:</dt>
+                            <dd class="col-sm-8"><%= new Date(ticket.closed_at).toLocaleDateString() %></dd>
+                        <% } %>
+                    </dl>
+                </div>
+            </div>
+            
+            <!-- Staff Actions -->
+            <% if (isStaff && canManage) { %>
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="bi bi-shield-lock"></i> Staff Actions
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Status Change -->
+                        <div class="mb-3">
+                            <label class="form-label">Change Status</label>
+                            <select class="form-select" id="statusSelect" onchange="updateStatus(this.value)">
+                                <option value="open" <%= ticket.status === 'open' ? 'selected' : '' %>>Open</option>
+                                <option value="in_progress" <%= ticket.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                                <option value="closed" <%= ticket.status === 'closed' ? 'selected' : '' %>>Closed</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Priority Change -->
+                        <div class="mb-3">
+                            <label class="form-label">Change Priority</label>
+                            <select class="form-select" id="prioritySelect" onchange="updatePriority(this.value)">
+                                <option value="low" <%= ticket.priority === 'low' ? 'selected' : '' %>>Low</option>
+                                <option value="normal" <%= ticket.priority === 'normal' ? 'selected' : '' %>>Normal</option>
+                                <option value="high" <%= ticket.priority === 'high' ? 'selected' : '' %>>High</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Assign Ticket -->
+                        <div class="mb-3">
+                            <label class="form-label">Assign To</label>
+                            <select class="form-select" id="assignSelect" onchange="assignTicket(this.value)">
+                                <option value="">Unassigned</option>
+                                <option value="<%= user.id %>" <%= ticket.assigned_to === user.id ? 'selected' : '' %>>Me</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="d-grid gap-2">
+                            <% if (ticket.status !== 'closed') { %>
+                                <button class="btn btn-danger btn-sm" onclick="updateStatus('closed')">
+                                    <i class="bi bi-x-circle"></i> Close Ticket
+                                </button>
+                            <% } else { %>
+                                <button class="btn btn-success btn-sm" onclick="updateStatus('open')">
+                                    <i class="bi bi-arrow-clockwise"></i> Reopen Ticket
+                                </button>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+            
+            <!-- User Actions -->
+            <% if (!isStaff && ticket.user_id === user.id && ticket.status !== 'closed') { %>
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Actions</h6>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-secondary btn-sm w-100" onclick="if(confirm('Are you sure you want to close this ticket?')) updateStatus('closed')">
+                            <i class="bi bi-x-circle"></i> Close Ticket
+                        </button>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script>
+const ticketId = '<%= ticket.ticket_id %>';
+const isStaff = <%= isStaff %>;
+
+// Auto-scroll to bottom of messages
+document.getElementById('messageContainer').scrollTop = document.getElementById('messageContainer').scrollHeight;
+
+// Reply form handler
+document.getElementById('replyForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const messageInput = document.getElementById('replyMessage');
+    const message = messageInput.value.trim();
+    if (!message) return;
+    
+    // Disable form while sending
+    messageInput.disabled = true;
+    e.target.querySelector('button').disabled = true;
+    
+    try {
+        const response = await fetch(`/support/ticket/${ticketId}/message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            location.reload();
+        } else {
+            alert('Error sending message: ' + (result.error || 'Unknown error'));
+            messageInput.disabled = false;
+            e.target.querySelector('button').disabled = false;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error sending message');
+        messageInput.disabled = false;
+        e.target.querySelector('button').disabled = false;
+    }
+});
+
+// Staff functions
+async function updateStatus(status) {
+    if (!isStaff && status === 'closed') {
+        if (!confirm('Are you sure you want to close this ticket?')) return;
+    }
+    
+    try {
+        const response = await fetch(`/support/ticket/${ticketId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            location.reload();
+        } else {
+            alert('Error updating status: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating status');
+    }
+}
+
+async function updatePriority(priority) {
+    try {
+        const response = await fetch(`/support/ticket/${ticketId}/priority`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ priority })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Priority updated successfully', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            alert('Error updating priority');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating priority');
+    }
+}
+
+async function assignTicket(staffId) {
+    try {
+        const response = await fetch(`/support/ticket/${ticketId}/assign`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ staffId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Ticket assigned successfully', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            alert('Error assigning ticket');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error assigning ticket');
+    }
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} position-fixed top-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.innerHTML = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+// Auto-refresh for open tickets (every 30 seconds)
+<% if (ticket.status !== 'closed') { %>
+    setInterval(() => {
+        // Could implement WebSocket for real-time updates
+        // For now, just reload the page
+        // location.reload();
+    }, 30000);
+<% } %>
+</script>
+
+<%- include('partials/footer') %>

@@ -1,13 +1,13 @@
-// commands/utility/help.js
+// commands/utility/help.js - FIXED
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('Zeigt alle verfügbaren Commands an')
+        .setDescription('Shows all available commands')
         .addStringOption(option =>
             option.setName('command')
-                .setDescription('Spezifischer Command für Details')
+                .setDescription('Specific command for details')
                 .setRequired(false)
         ),
     
@@ -16,81 +16,84 @@ module.exports = {
     
     async execute(interaction) {
         const commandName = interaction.options.getString('command');
-        const { commands } = interaction.client;
+        const bot = require('../../bot');
+        const commands = bot.commands;
 
         if (commandName) {
-            // Zeige Details für einen spezifischen Command
+            // Show details for a specific command
             const command = commands.get(commandName);
             
             if (!command) {
                 return interaction.reply({ 
-                    content: `❌ Command \`${commandName}\` nicht gefunden!`, 
+                    content: `❌ Command \`${commandName}\` not found!`, 
                     ephemeral: true 
                 });
             }
 
             const embed = new EmbedBuilder()
-                .setColor('#0099ff')
+                .setColor('#5865F2')
                 .setTitle(`📋 Command: /${command.data.name}`)
                 .setDescription(command.data.description)
                 .addFields(
-                    { name: 'Kategorie', value: command.category || 'Keine', inline: true },
-                    { name: 'Cooldown', value: `${command.cooldown || 0} Sekunden`, inline: true }
+                    { name: 'Category', value: command.category || 'None', inline: true },
+                    { name: 'Cooldown', value: `${command.cooldown || 0} seconds`, inline: true }
                 )
                 .setTimestamp();
 
-            if (command.data.options && command.data.options.length > 0) {
-                const options = command.data.options.map(option => 
-                    `\`${option.name}\` - ${option.description} ${option.required ? '(erforderlich)' : '(optional)'}`
+            // Check if options exist and is an array
+            const options = command.data.options;
+            if (options && Array.isArray(options) && options.length > 0) {
+                const optionsList = options.map(option => 
+                    `\`${option.name}\` - ${option.description} ${option.required ? '(required)' : '(optional)'}`
                 ).join('\n');
                 
-                embed.addFields({ name: 'Optionen', value: options });
+                embed.addFields({ name: 'Options', value: optionsList });
             }
 
             return interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
-        // Zeige alle Commands kategorisiert
+        // Show all commands categorized
         const categories = {};
         
         commands.forEach(command => {
-            const category = command.category || 'Andere';
+            const category = command.category || 'Other';
             if (!categories[category]) categories[category] = [];
             categories[category].push(command);
         });
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('📚 Hilfe - Verfügbare Commands')
-            .setDescription('Verwende `/help <command>` für Details zu einem spezifischen Command.')
+            .setColor('#5865F2')
+            .setTitle('📚 Omnia Bot - Available Commands')
+            .setDescription('Use `/help <command>` for details about a specific command.')
             .setTimestamp()
             .setFooter({ 
-                text: `${commands.size} Commands verfügbar`, 
+                text: `${commands.size} commands available`, 
                 iconURL: interaction.client.user.displayAvatarURL() 
             });
 
-        // Füge Kategorien als Fields hinzu
+        // Add categories as fields
         Object.keys(categories).forEach(category => {
             const categoryCommands = categories[category]
                 .map(cmd => `\`/${cmd.data.name}\``)
                 .join(', ');
             
             embed.addFields({
-                name: `${this.getCategoryEmoji(category)} ${category}`,
-                value: categoryCommands,
+                name: `${this.getCategoryEmoji(category)} ${category.charAt(0).toUpperCase() + category.slice(1)}`,
+                value: categoryCommands || 'No commands',
                 inline: false
             });
         });
 
-        // Select Menu für Kategorien
+        // Create select menu for categories
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('help_category')
-            .setPlaceholder('Wähle eine Kategorie für Details')
+            .setPlaceholder('Choose a category for details')
             .addOptions(
                 Object.keys(categories).map(category => ({
-                    label: category,
+                    label: category.charAt(0).toUpperCase() + category.slice(1),
                     value: category,
-                    description: `${categories[category].length} Commands`,
+                    description: `${categories[category].length} commands`,
                     emoji: this.getCategoryEmoji(category)
                 }))
             );
@@ -111,7 +114,7 @@ module.exports = {
             'fun': '🎉',
             'music': '🎵',
             'admin': '⚙️',
-            'andere': '📁'
+            'other': '📁'
         };
         return emojis[category.toLowerCase()] || '📁';
     }

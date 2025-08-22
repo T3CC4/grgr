@@ -1,0 +1,106 @@
+<div class="card">
+    <div class="card-header">
+        <h5><i class="bi bi-file-text"></i> Audit Logs</h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+                <button type="button" class="btn btn-outline-danger" data-filter="ban">Bans</button>
+                <button type="button" class="btn btn-outline-warning" data-filter="kick">Kicks</button>
+                <button type="button" class="btn btn-outline-info" data-filter="warn">Warnings</button>
+                <button type="button" class="btn btn-outline-secondary" data-filter="mute">Mutes</button>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Action</th>
+                        <th>User</th>
+                        <th>Moderator</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody id="auditLogsTable">
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            <div class="spinner-border spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Loading audit logs...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <nav>
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Previous</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<script>
+// Load audit logs
+async function loadAuditLogs(filter = 'all') {
+    try {
+        const response = await fetch(`/api/guild/${currentGuildId}/logs?filter=${filter}`);
+        const logs = await response.json();
+        
+        const tbody = document.getElementById('auditLogsTable');
+        
+        if (logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No logs found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = logs.map(log => `
+            <tr>
+                <td>${new Date(log.created_at).toLocaleString()}</td>
+                <td><span class="badge bg-${getActionColor(log.action)}">${log.action}</span></td>
+                <td>${log.user_id}</td>
+                <td>${log.moderator_id}</td>
+                <td>${log.reason || 'No reason provided'}</td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Error loading audit logs:', error);
+    }
+}
+
+function getActionColor(action) {
+    const colors = {
+        'BAN': 'danger',
+        'KICK': 'warning',
+        'WARN': 'info',
+        'MUTE': 'secondary',
+        'UNBAN': 'success'
+    };
+    return colors[action] || 'primary';
+}
+
+// Filter buttons
+document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        loadAuditLogs(e.target.dataset.filter);
+    });
+});
+
+// Load on page load
+loadAuditLogs();
+</script>

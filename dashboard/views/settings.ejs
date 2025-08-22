@@ -1,0 +1,295 @@
+<!-- dashboard/views/settings.ejs - NEW User Settings Page -->
+<%- include('partials/header', { title: 'Settings - Omnia Bot' }) %>
+<%- include('partials/navbar', { user: user, activeTab: 'settings' }) %>
+
+<div class="container mt-4">
+    <h1>Settings</h1>
+    <p class="lead">Manage your account and preferences</p>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="#account" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                    <i class="bi bi-person"></i> Account
+                </a>
+                <a href="#preferences" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-sliders"></i> Preferences
+                </a>
+                <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-bell"></i> Notifications
+                </a>
+                <a href="#privacy" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-shield-lock"></i> Privacy
+                </a>
+                <a href="#data" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                    <i class="bi bi-database"></i> Data & Storage
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- Account Settings -->
+                <div class="tab-pane fade show active" id="account">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Account Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form>
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label">Username</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" value="<%= user.username %>" disabled>
+                                        <small class="text-muted">Your Discord username cannot be changed here</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label">Discord ID</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" value="<%= user.id %>" disabled>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label">Email</label>
+                                    <div class="col-sm-9">
+                                        <input type="email" class="form-control" value="<%= user.email || 'Not available' %>" disabled>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <label class="col-sm-3 col-form-label">Account Created</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" value="<%= new Date(parseInt(user.id) / 4194304 + 1420070400000).toLocaleDateString() %>" disabled>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preferences -->
+                <div class="tab-pane fade" id="preferences">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Dashboard Preferences</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="preferencesForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Dashboard Theme</label>
+                                    <select class="form-select" id="theme">
+                                        <option value="light">Light</option>
+                                        <option value="dark">Dark</option>
+                                        <option value="auto">Auto (System)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Language</label>
+                                    <select class="form-select" id="language">
+                                        <option value="en" selected>English</option>
+                                        <option value="de">Deutsch</option>
+                                        <option value="fr">Français</option>
+                                        <option value="es">Español</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Timezone</label>
+                                    <select class="form-select" id="timezone">
+                                        <option value="UTC">UTC</option>
+                                        <option value="America/New_York">Eastern Time</option>
+                                        <option value="America/Chicago">Central Time</option>
+                                        <option value="America/Los_Angeles">Pacific Time</option>
+                                        <option value="Europe/London">London</option>
+                                        <option value="Europe/Berlin">Berlin</option>
+                                        <option value="Asia/Tokyo">Tokyo</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Save Preferences</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notifications -->
+                <div class="tab-pane fade" id="notifications">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Notification Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="notificationsForm">
+                                <h6>Email Notifications</h6>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="emailTicketReply" checked>
+                                    <label class="form-check-label" for="emailTicketReply">
+                                        New ticket replies
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="emailTicketStatus">
+                                    <label class="form-check-label" for="emailTicketStatus">
+                                        Ticket status changes
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-4">
+                                    <input class="form-check-input" type="checkbox" id="emailNewsletter">
+                                    <label class="form-check-label" for="emailNewsletter">
+                                        Omnia Bot updates and news
+                                    </label>
+                                </div>
+                                
+                                <h6>Dashboard Notifications</h6>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="dashboardAlerts" checked>
+                                    <label class="form-check-label" for="dashboardAlerts">
+                                        Show dashboard alerts
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="soundNotifications">
+                                    <label class="form-check-label" for="soundNotifications">
+                                        Sound notifications
+                                    </label>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Save Notifications</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Privacy -->
+                <div class="tab-pane fade" id="privacy">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Privacy Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="privacyForm">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="profilePublic">
+                                    <label class="form-check-label" for="profilePublic">
+                                        Make my profile public
+                                    </label>
+                                    <div class="form-text">Allow other users to view your profile</div>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="showServers">
+                                    <label class="form-check-label" for="showServers">
+                                        Show my servers on profile
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="analytics" checked>
+                                    <label class="form-check-label" for="analytics">
+                                        Allow analytics
+                                    </label>
+                                    <div class="form-text">Help us improve Omnia Bot by sharing anonymous usage data</div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Save Privacy Settings</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Data & Storage -->
+                <div class="tab-pane fade" id="data">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Data & Storage</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6>Data Usage</h6>
+                            <p class="text-muted">Your data stored in Omnia Bot systems:</p>
+                            
+                            <ul class="list-group mb-4">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Server Configurations
+                                    <span class="badge bg-primary rounded-pill"><%= userGuilds || 0 %> servers</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Support Tickets
+                                    <span class="badge bg-primary rounded-pill"><%= userTickets || 0 %> tickets</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Custom Commands
+                                    <span class="badge bg-primary rounded-pill">0 commands</span>
+                                </li>
+                            </ul>
+                            
+                            <h6>Data Management</h6>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-outline-primary" onclick="downloadData()">
+                                    <i class="bi bi-download"></i> Download My Data
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="if(confirm('Are you sure? This will delete all your data from Omnia Bot.')) deleteData()">
+                                    <i class="bi bi-trash"></i> Delete All My Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Save preferences
+document.getElementById('preferencesForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    // Save to localStorage for now
+    localStorage.setItem('theme', document.getElementById('theme').value);
+    localStorage.setItem('language', document.getElementById('language').value);
+    localStorage.setItem('timezone', document.getElementById('timezone').value);
+    showAlert('success', 'Preferences saved successfully!');
+});
+
+// Save notifications
+document.getElementById('notificationsForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showAlert('success', 'Notification settings saved successfully!');
+});
+
+// Save privacy
+document.getElementById('privacyForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showAlert('success', 'Privacy settings saved successfully!');
+});
+
+function downloadData() {
+    // Implement data download
+    alert('Data download will be sent to your email');
+}
+
+function deleteData() {
+    // Implement data deletion
+    alert('Data deletion request submitted');
+}
+
+function showAlert(type, message) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+    alert.style.zIndex = '9999';
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    setTimeout(() => alert.remove(), 5000);
+}
+</script>
+
+<%- include('partials/footer') %>

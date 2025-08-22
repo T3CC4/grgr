@@ -1,18 +1,16 @@
-// events/ready.js
 const { Events } = require('discord.js');
 
 module.exports = {
     name: Events.ClientReady,
     once: true,
-    execute(client) {
+    execute(client, bot) {
         console.log(`✅ Bot ist online als ${client.user.tag}!`);
         console.log(`🌐 In ${client.guilds.cache.size} Servern aktiv`);
         
-        // Status setzen
         client.user.setPresence({
             activities: [{
                 name: `/help | ${client.guilds.cache.size} Server`,
-                type: 0 // PLAYING
+                type: 0
             }],
             status: 'online'
         });
@@ -26,6 +24,6 @@ module.exports = {
                 }],
                 status: 'online'
             });
-        }, 600000); // 10 Minuten
+        }, 600000);
     },
 };

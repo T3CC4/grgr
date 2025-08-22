@@ -1,0 +1,92 @@
+<%- include('partials/header', { title: 'Profile - Omnia Bot' }) %>
+<%- include('partials/navbar', { user: user, activeTab: 'profile' }) %>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=256" 
+                         alt="Avatar" class="rounded-circle mb-3" width="150">
+                    <h4><%= user.username %></h4>
+                    <p class="text-muted">#<%= user.discriminator || '0' %></p>
+                    <hr>
+                    <p><strong>User ID:</strong> <%= user.id %></p>
+                    <p><strong>Servers:</strong> <%= user.guilds ? user.guilds.length : 0 %></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Username:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            <%= user.username %>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Email:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            <%= user.email || 'Not available' %>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3">
+                            <strong>Locale:</strong>
+                        </div>
+                        <div class="col-sm-9">
+                            <%= user.locale || 'en-US' %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-server"></i> Your Servers with Omnia</h5>
+                </div>
+                <div class="card-body">
+                    <% if (user.guilds) { %>
+                        <div class="list-group">
+                            <% user.guilds.slice(0, 5).forEach(guild => { %>
+                                <a href="/dashboard/<%= guild.id %>" class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <% if (guild.icon) { %>
+                                                <img src="https://cdn.discordapp.com/icons/<%= guild.id %>/<%= guild.icon %>.png" 
+                                                     alt="<%= guild.name %>" width="30" class="rounded-circle me-2">
+                                            <% } %>
+                                            <%= guild.name %>
+                                        </div>
+                                        <% if (guild.owner) { %>
+                                            <span class="badge bg-primary">Owner</span>
+                                        <% } %>
+                                    </div>
+                                </a>
+                            <% }) %>
+                        </div>
+                        <% if (user.guilds.length > 5) { %>
+                            <p class="text-muted mt-3 text-center">
+                                And <%= user.guilds.length - 5 %> more servers...
+                                <a href="/dashboard">View all</a>
+                            </p>
+                        <% } %>
+                    <% } else { %>
+                        <p class="text-muted">No servers found</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

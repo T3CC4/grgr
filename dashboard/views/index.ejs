@@ -1,14 +1,17 @@
-<%- include('partials/header', { title: 'Home - Discord Bot' }) %>
+<%- include('partials/header', { title: 'Omnia Bot - The All-in-One Discord Solution' }) %>
 <%- include('partials/navbar', { user: user, activeTab: 'home' }) %>
 
 <!-- Hero Section -->
 <section class="hero-section text-center">
     <div class="container">
-        <h1 class="display-4 fw-bold mb-4">The Ultimate Discord Bot</h1>
-        <p class="lead mb-4">Enhance your Discord server with powerful features, moderation, and entertainment</p>
+        <h1 class="display-3 fw-bold mb-4">
+            <i class="bi bi-infinity"></i> Omnia Bot
+        </h1>
+        <p class="lead mb-4">The all-in-one Discord bot that does everything. Moderation, Music, Fun, and more!</p>
+        <p class="mb-4 text-white-50">Omnia - Latin for "everything" - Your complete Discord solution</p>
         <div class="d-flex justify-content-center gap-3 flex-wrap">
             <a href="<%= botInviteURL %>" class="btn btn-light btn-lg">
-                <i class="bi bi-plus-circle"></i> Add Bot
+                <i class="bi bi-plus-circle"></i> Add Omnia to Server
             </a>
             <% if (user) { %>
                 <a href="/dashboard" class="btn btn-outline-light btn-lg">
@@ -16,7 +19,7 @@
                 </a>
             <% } else { %>
                 <a href="/auth/discord" class="btn btn-outline-light btn-lg">
-                    <i class="bi bi-discord"></i> Login
+                    <i class="bi bi-discord"></i> Login to Configure
                 </a>
             <% } %>
         </div>
@@ -26,15 +29,15 @@
 <!-- Features Section -->
 <section id="features" class="py-5">
     <div class="container">
-        <h2 class="text-center mb-5">Features</h2>
+        <h2 class="text-center mb-5">Why Choose Omnia?</h2>
         <div class="row g-4">
             <% const features = [
-                { icon: 'bi-shield-check', color: 'primary', title: 'Moderation', desc: 'Advanced moderation tools with auto-mod, warning system and logs.' },
-                { icon: 'bi-music-note-beamed', color: 'success', title: 'Music', desc: 'High-quality music from YouTube, Spotify and other platforms.' },
-                { icon: 'bi-emoji-smile', color: 'warning', title: 'Fun & Games', desc: 'Games, memes, and entertainment for your community.' },
-                { icon: 'bi-gear', color: 'info', title: 'Customizable', desc: 'Fully customizable settings via web dashboard.' },
-                { icon: 'bi-lightning', color: 'danger', title: 'Fast', desc: 'Optimized for performance with minimal latency.' },
-                { icon: 'bi-clock', color: 'secondary', title: '24/7 Online', desc: 'Reliable uptime with professional hosting.' }
+                { icon: 'bi-shield-check', color: 'primary', title: 'Advanced Moderation', desc: 'Auto-mod, warning system, raid protection, and comprehensive logging.' },
+                { icon: 'bi-music-note-beamed', color: 'success', title: 'Premium Music', desc: 'Crystal clear audio from YouTube, Spotify, SoundCloud and more.' },
+                { icon: 'bi-emoji-smile', color: 'warning', title: 'Entertainment', desc: 'Games, memes, fun commands, and interactive features.' },
+                { icon: 'bi-gear-fill', color: 'info', title: 'Fully Customizable', desc: 'Configure everything through our intuitive web dashboard.' },
+                { icon: 'bi-lightning-charge', color: 'danger', title: 'Lightning Fast', desc: 'Optimized performance with <50ms response time.' },
+                { icon: 'bi-graph-up', color: 'purple', title: 'Analytics', desc: 'Detailed server statistics and member insights.' }
             ] %>
             <% features.forEach(feature => { %>
                 <div class="col-md-4">
@@ -47,6 +50,30 @@
                     </div>
                 </div>
             <% }) %>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h2 class="text-primary">1000+</h2>
+                <p>Active Servers</p>
+            </div>
+            <div class="col-md-3">
+                <h2 class="text-success">50,000+</h2>
+                <p>Total Users</p>
+            </div>
+            <div class="col-md-3">
+                <h2 class="text-warning">99.9%</h2>
+                <p>Uptime</p>
+            </div>
+            <div class="col-md-3">
+                <h2 class="text-info">24/7</h2>
+                <p>Support</p>
+            </div>
         </div>
     </div>
 </section>

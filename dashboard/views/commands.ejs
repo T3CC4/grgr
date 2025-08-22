@@ -1,0 +1,200 @@
+<%- include('partials/header', { title: 'Commands - Omnia Bot' }) %>
+<%- include('partials/navbar', { user: user, activeTab: 'commands' }) %>
+
+<div class="container mt-4">
+    <h1 class="mb-4">Omnia Bot Commands</h1>
+    <p class="lead">Explore all available commands for Omnia Bot</p>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group sticky-top" style="top: 20px;">
+                <a href="#moderation" class="list-group-item list-group-item-action">
+                    <i class="bi bi-shield"></i> Moderation
+                </a>
+                <a href="#utility" class="list-group-item list-group-item-action">
+                    <i class="bi bi-tools"></i> Utility
+                </a>
+                <a href="#fun" class="list-group-item list-group-item-action">
+                    <i class="bi bi-emoji-smile"></i> Fun
+                </a>
+                <a href="#music" class="list-group-item list-group-item-action">
+                    <i class="bi bi-music-note"></i> Music
+                </a>
+                <a href="#admin" class="list-group-item list-group-item-action">
+                    <i class="bi bi-gear"></i> Admin
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Moderation Commands -->
+            <div id="moderation" class="mb-5">
+                <h3><i class="bi bi-shield text-danger"></i> Moderation Commands</h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                <th>Description</th>
+                                <th>Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/ban</code></td>
+                                <td>Ban a user from the server</td>
+                                <td><code>/ban @user [reason]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/kick</code></td>
+                                <td>Kick a user from the server</td>
+                                <td><code>/kick @user [reason]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/warn</code></td>
+                                <td>Warn a user</td>
+                                <td><code>/warn @user [reason]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/mute</code></td>
+                                <td>Mute a user</td>
+                                <td><code>/mute @user [duration] [reason]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/clear</code></td>
+                                <td>Delete messages</td>
+                                <td><code>/clear [amount]</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Utility Commands -->
+            <div id="utility" class="mb-5">
+                <h3><i class="bi bi-tools text-primary"></i> Utility Commands</h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                <th>Description</th>
+                                <th>Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/help</code></td>
+                                <td>Show all commands</td>
+                                <td><code>/help [command]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/ping</code></td>
+                                <td>Check bot latency</td>
+                                <td><code>/ping</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/userinfo</code></td>
+                                <td>Get user information</td>
+                                <td><code>/userinfo [@user]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/serverinfo</code></td>
+                                <td>Get server information</td>
+                                <td><code>/serverinfo</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/avatar</code></td>
+                                <td>Get user avatar</td>
+                                <td><code>/avatar [@user]</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Fun Commands -->
+            <div id="fun" class="mb-5">
+                <h3><i class="bi bi-emoji-smile text-warning"></i> Fun Commands</h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                <th>Description</th>
+                                <th>Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/meme</code></td>
+                                <td>Get a random meme</td>
+                                <td><code>/meme</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/8ball</code></td>
+                                <td>Ask the magic 8-ball</td>
+                                <td><code>/8ball [question]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/roll</code></td>
+                                <td>Roll a dice</td>
+                                <td><code>/roll [sides]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/coinflip</code></td>
+                                <td>Flip a coin</td>
+                                <td><code>/coinflip</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Music Commands -->
+            <div id="music" class="mb-5">
+                <h3><i class="bi bi-music-note text-success"></i> Music Commands</h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Command</th>
+                                <th>Description</th>
+                                <th>Usage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/play</code></td>
+                                <td>Play a song</td>
+                                <td><code>/play [song/url]</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/pause</code></td>
+                                <td>Pause playback</td>
+                                <td><code>/pause</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/skip</code></td>
+                                <td>Skip current song</td>
+                                <td><code>/skip</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/queue</code></td>
+                                <td>Show queue</td>
+                                <td><code>/queue</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>/volume</code></td>
+                                <td>Set volume</td>
+                                <td><code>/volume [0-100]</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>
