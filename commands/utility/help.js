@@ -1,13 +1,12 @@
-// commands/utility/help.js - FIXED
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('Shows all available commands')
+        .setDescription('Display help information and available commands')
         .addStringOption(option =>
             option.setName('command')
-                .setDescription('Specific command for details')
+                .setDescription('Get detailed information about a specific command')
                 .setRequired(false)
         ),
     
@@ -16,16 +15,15 @@ module.exports = {
     
     async execute(interaction) {
         const commandName = interaction.options.getString('command');
-        const bot = require('../../bot');
-        const commands = bot.commands;
+        const commands = interaction.client.commands || new Map();
 
         if (commandName) {
             // Show details for a specific command
-            const command = commands.get(commandName);
+            const command = commands.get(commandName.toLowerCase());
             
             if (!command) {
                 return interaction.reply({ 
-                    content: `❌ Command \`${commandName}\` not found!`, 
+                    content: `❌ Command \`${commandName}\` not found!\n\nUse \`/help\` to see all available commands.`, 
                     ephemeral: true 
                 });
             }
@@ -35,19 +33,37 @@ module.exports = {
                 .setTitle(`📋 Command: /${command.data.name}`)
                 .setDescription(command.data.description)
                 .addFields(
-                    { name: 'Category', value: command.category || 'None', inline: true },
-                    { name: 'Cooldown', value: `${command.cooldown || 0} seconds`, inline: true }
+                    { name: '📂 Category', value: command.category || 'None', inline: true },
+                    { name: '⏱️ Cooldown', value: `${command.cooldown || 3} seconds`, inline: true }
                 )
-                .setTimestamp();
+                .setTimestamp()
+                .setFooter({
+                    text: `Requested by ${interaction.user.tag}`,
+                    iconURL: interaction.user.displayAvatarURL()
+                });
 
-            // Check if options exist and is an array
+            // Add options if they exist
             const options = command.data.options;
             if (options && Array.isArray(options) && options.length > 0) {
-                const optionsList = options.map(option => 
-                    `\`${option.name}\` - ${option.description} ${option.required ? '(required)' : '(optional)'}`
-                ).join('\n');
+                const optionsList = options.map(option => {
+                    const required = option.required ? ' `(required)`' : ' `(optional)`';
+                    return `**${option.name}**${required}\n${option.description}`;
+                }).join('\n\n');
                 
-                embed.addFields({ name: 'Options', value: optionsList });
+                embed.addFields({ 
+                    name: '⚙️ Options', 
+                    value: optionsList.length > 1024 ? optionsList.substring(0, 1020) + '...' : optionsList,
+                    inline: false 
+                });
+            }
+
+            // Add permissions info if it's a moderation command
+            if (command.category === 'moderation' && command.data.default_member_permissions) {
+                embed.addFields({
+                    name: '🛡️ Required Permissions',
+                    value: 'You need appropriate moderation permissions to use this command.',
+                    inline: false
+                });
             }
 
             return interaction.reply({ embeds: [embed], ephemeral: true });
@@ -64,45 +80,52 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor('#5865F2')
-            .setTitle('📚 Omnia Bot - Available Commands')
-            .setDescription('Use `/help <command>` for details about a specific command.')
+            .setTitle('📚 Omnia Bot - Command Help')
+            .setDescription('Here are all available commands. Use `/help <command>` for detailed information about a specific command.')
             .setTimestamp()
             .setFooter({ 
-                text: `${commands.size} commands available`, 
+                text: `${commands.size} commands available • Use /help <command> for details`, 
                 iconURL: interaction.client.user.displayAvatarURL() 
             });
 
         // Add categories as fields
-        Object.keys(categories).forEach(category => {
+        Object.keys(categories).sort().forEach(category => {
             const categoryCommands = categories[category]
+                .sort((a, b) => a.data.name.localeCompare(b.data.name))
                 .map(cmd => `\`/${cmd.data.name}\``)
                 .join(', ');
             
+            const emoji = this.getCategoryEmoji(category);
+            
             embed.addFields({
-                name: `${this.getCategoryEmoji(category)} ${category.charAt(0).toUpperCase() + category.slice(1)}`,
+                name: `${emoji} ${category.charAt(0).toUpperCase() + category.slice(1)} (${categories[category].length})`,
                 value: categoryCommands || 'No commands',
                 inline: false
             });
         });
 
-        // Create select menu for categories
-        const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId('help_category')
-            .setPlaceholder('Choose a category for details')
-            .addOptions(
-                Object.keys(categories).map(category => ({
-                    label: category.charAt(0).toUpperCase() + category.slice(1),
-                    value: category,
-                    description: `${categories[category].length} commands`,
-                    emoji: this.getCategoryEmoji(category)
-                }))
-            );
+        // Create select menu for categories (if there are multiple categories)
+        const components = [];
+        if (Object.keys(categories).length > 1) {
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId('help_category')
+                .setPlaceholder('🔍 Choose a category for detailed view')
+                .addOptions(
+                    Object.keys(categories).sort().map(category => ({
+                        label: category.charAt(0).toUpperCase() + category.slice(1),
+                        value: category,
+                        description: `View all ${category} commands (${categories[category].length} commands)`,
+                        emoji: this.getCategoryEmoji(category)
+                    }))
+                );
 
-        const row = new ActionRowBuilder().addComponents(selectMenu);
+            const row = new ActionRowBuilder().addComponents(selectMenu);
+            components.push(row);
+        }
 
         await interaction.reply({ 
             embeds: [embed], 
-            components: [row],
+            components: components,
             ephemeral: true 
         });
     },
@@ -114,6 +137,9 @@ module.exports = {
             'fun': '🎉',
             'music': '🎵',
             'admin': '⚙️',
+            'economy': '💰',
+            'games': '🎮',
+            'social': '👥',
             'other': '📁'
         };
         return emojis[category.toLowerCase()] || '📁';

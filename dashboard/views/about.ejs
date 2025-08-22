@@ -1,0 +1,254 @@
+<!-- dashboard/views/about.ejs -->
+<%- include('partials/header', { title: 'About - Omnia Bot' }) %>
+<%- include('partials/navbar', { user: user, activeTab: 'about' }) %>
+
+<!-- Hero Section -->
+<section class="bg-gradient-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">About Omnia</h1>
+                <p class="lead mb-4">From the Latin word meaning "everything" - Omnia Bot is designed to be your complete Discord server solution.</p>
+                <div class="d-flex gap-3">
+                    <div class="text-center">
+                        <div class="fw-bold fs-4" id="liveStats">-</div>
+                        <small>Servers</small>
+                    </div>
+                    <div class="text-center">
+                        <div class="fw-bold fs-4" id="liveUsers">-</div>
+                        <small>Users</small>
+                    </div>
+                    <div class="text-center">
+                        <div class="fw-bold fs-4" id="liveUptime">-</div>
+                        <small>Uptime</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <div class="bg-white bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 200px; height: 200px;">
+                        <i class="bi bi-infinity display-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="display-5 fw-bold mb-4">Our Mission</h2>
+                <p class="lead text-muted mb-5">To provide Discord server owners with a comprehensive, reliable, and easy-to-use bot that handles everything from moderation to entertainment, so they can focus on building their community.</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-lightbulb text-warning display-4 mb-3"></i>
+                        <h5 class="fw-bold">Innovation</h5>
+                        <p class="text-muted mb-0">Constantly evolving with new features and improvements based on community feedback.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-shield-check text-success display-4 mb-3"></i>
+                        <h5 class="fw-bold">Reliability</h5>
+                        <p class="text-muted mb-0">99.9% uptime guarantee with robust infrastructure and automatic failover systems.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-heart text-danger display-4 mb-3"></i>
+                        <h5 class="fw-bold">Community</h5>
+                        <p class="text-muted mb-0">Built by the community, for the community. Every feature serves a real user need.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Technology Stack -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <h2 class="display-6 fw-bold mb-4">Built with Modern Technology</h2>
+                <p class="lead text-muted mb-4">Omnia Bot is built using cutting-edge technologies to ensure optimal performance, scalability, and reliability.</p>
+                
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded p-2 me-3">
+                                <i class="bi bi-code-square"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Node.js</h6>
+                                <small class="text-muted">JavaScript Runtime</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info text-white rounded p-2 me-3">
+                                <i class="bi bi-discord"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Discord.js</h6>
+                                <small class="text-muted">Discord API Library</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success text-white rounded p-2 me-3">
+                                <i class="bi bi-database"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">SQLite</h6>
+                                <small class="text-muted">Database Engine</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning text-white rounded p-2 me-3">
+                                <i class="bi bi-globe"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">Express.js</h6>
+                                <small class="text-muted">Web Framework</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-3">System Architecture</h6>
+                        <div class="bg-dark text-light p-3 rounded">
+                            <pre class="mb-0"><code>┌─────────────────────────────────┐
+│         Discord Servers         │
+│     (Commands & Interactions)   │
+└─────────────┬───────────────────┘
+              │
+┌─────────────▼───────────────────┐
+│         Omnia Bot Core          │
+│    (Event Handling & Logic)     │
+└─────────────┬───────────────────┘
+              │
+┌─────────────▼───────────────────┐
+│        Web Dashboard            │
+│   (Configuration & Management)  │
+└─────────────┬───────────────────┘
+              │
+┌─────────────▼───────────────────┐
+│       SQLite Database           │
+│    (Persistent Data Storage)    │
+└─────────────────────────────────┘</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-4">Development Team</h2>
+            <p class="lead text-muted">Passionate developers committed to creating the best Discord bot experience.</p>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body p-4">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-fill fs-2"></i>
+                        </div>
+                        <h5 class="fw-bold">Development Team</h5>
+                        <p class="text-muted mb-3">Full-stack developers specializing in Discord bot development and web technologies.</p>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="#" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-github"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-discord"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Support & Contact -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <h2 class="display-6 fw-bold mb-4">Need Help?</h2>
+                <p class="lead mb-4">Our support team is here to help you get the most out of Omnia Bot.</p>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-headset text-white me-3 fs-4"></i>
+                            <div>
+                                <h6 class="fw-bold">24/7 Support</h6>
+                                <small class="opacity-75">Always available when you need us</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-chat-dots text-white me-3 fs-4"></i>
+                            <div>
+                                <h6 class="fw-bold">Discord Server</h6>
+                                <small class="opacity-75">Join our community</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-file-text text-white me-3 fs-4"></i>
+                            <div>
+                                <h6 class="fw-bold">Documentation</h6>
+                                <small class="opacity-75">Comprehensive guides</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex">
+                            <i class="bi bi-ticket-perforated text-white me-3 fs-4"></i>
+                            <div>
+                                <h6 class="fw-bold">Ticket System</h6>
+                                <small class="opacity-75">Direct support channel</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="bg-white bg-opacity-10 rounded p-4">
+                    <h5 class="fw-bold mb-3">Get Support</h5>
+                    <div class="d-grid gap-2">
+                        <% if (user) { %>
+                            <a href="/support" class="btn btn-light">
+                                <i class="bi bi-ticket-perforated"></i> Create Support Ticket
+                            </a>
+                        <%

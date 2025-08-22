@@ -1,0 +1,48 @@
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <% if (showUser) { %><th>User</th><% } %>
+                <th>Ticket ID</th>
+                <th>Subject</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <% if (showAssigned) { %><th>Assigned To</th><% } %>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% tickets.forEach(ticket => { %>
+                <tr>
+                    <% if (showUser) { %>
+                        <td><%= ticket.username %></td>
+                    <% } %>
+                    <td><code><%= ticket.ticket_id %></code></td>
+                    <td><%= ticket.subject %></td>
+                    <td><span class="badge bg-secondary"><%= ticket.category %></span></td>
+                    <td>
+                        <span class="badge bg-<%= ticket.status === 'open' ? 'success' : ticket.status === 'in_progress' ? 'warning' : 'secondary' %>">
+                            <%= ticket.status.replace('_', ' ') %>
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-<%= ticket.priority === 'high' ? 'danger' : ticket.priority === 'normal' ? 'primary' : 'secondary' %>">
+                            <%= ticket.priority %>
+                        </span>
+                    </td>
+                    <% if (showAssigned) { %>
+                        <td><%= ticket.assigned_to || 'Unassigned' %></td>
+                    <% } %>
+                    <td><%= new Date(ticket.created_at).toLocaleDateString() %></td>
+                    <td>
+                        <a href="/support/ticket/<%= ticket.ticket_id %>" class="btn btn-sm btn-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>

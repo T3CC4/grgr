@@ -1,0 +1,16 @@
+<!-- dashboard/views/partials/nav-items/authenticated.ejs -->
+<li class="nav-item">
+    <a class="nav-link <%= activeTab === 'dashboard' ? 'active' : '' %>" href="/dashboard">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link <%= activeTab === 'commands' ? 'active' : '' %>" href="/commands-list">
+        <i class="bi bi-terminal"></i> Commands
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link <%= activeTab === 'support' ? 'active' : '' %>" href="/support">
+        <i class="bi bi-headset"></i> Support
+    </a>
+</li>

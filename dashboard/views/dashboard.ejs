@@ -1,4 +1,5 @@
-<%- include('partials/header', { title: 'Omnia - Dashboard' }) %>
+<!-- dashboard/views/dashboard.ejs - SIMPLIFIED -->
+<%- include('partials/header', { title: 'Dashboard - Omnia Bot' }) %>
 <%- include('partials/navbar', { user: user, activeTab: 'dashboard' }) %>
 
 <div class="container mt-4">
@@ -6,7 +7,7 @@
     <div class="row mb-4">
         <div class="col">
             <h1 class="display-6">Welcome back, <%= user.username %>!</h1>
-            <p class="lead text-muted">Manage your Discord servers with the bot dashboard</p>
+            <p class="lead text-muted">Manage your Discord servers with Omnia Bot</p>
         </div>
     </div>
 
@@ -14,19 +15,21 @@
 
     <!-- Statistics Cards -->
     <div class="row mb-5">
-        <% const stats = [
+        <% 
+        const stats = [
             { icon: 'bi-servers', color: 'primary', value: guilds.length, label: 'Manageable Servers' },
             { icon: 'bi-robot', color: 'success', value: guilds.filter(g => g.botInGuild).length, label: 'Bot Active' },
             { icon: 'bi-people', color: 'info', value: totalMembers || '-', label: 'Total Members' },
             { icon: 'bi-activity', color: 'warning', value: 'Online', label: 'Bot Status' }
-        ] %>
+        ];
+        %>
         <% stats.forEach(stat => { %>
-            <div class="col-md-3">
-                <div class="card text-center">
+            <div class="col-md-3 mb-3">
+                <div class="card text-center stat-card">
                     <div class="card-body">
-                        <i class="bi <%= stat.icon %> text-<%= stat.color %> fs-1"></i>
-                        <h5 class="card-title mt-2"><%= stat.value %></h5>
-                        <p class="card-text text-muted"><%= stat.label %></p>
+                        <i class="bi <%= stat.icon %> text-<%= stat.color %> fs-1 mb-2"></i>
+                        <div class="stat-value"><%= stat.value %></div>
+                        <div class="stat-label"><%= stat.label %></div>
                     </div>
                 </div>
             </div>
@@ -36,18 +39,35 @@
     <!-- Server Selection -->
     <div class="row">
         <div class="col">
-            <h3 class="mb-4">Your Servers</h3>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Your Servers</h3>
+                <% if (guilds.length > 0) { %>
+                    <div class="btn-group" role="group">
+                        <input type="radio" class="btn-check" name="serverFilter" id="filterAll" checked>
+                        <label class="btn btn-outline-primary" for="filterAll">All</label>
+                        
+                        <input type="radio" class="btn-check" name="serverFilter" id="filterActive">
+                        <label class="btn btn-outline-success" for="filterActive">Active</label>
+                        
+                        <input type="radio" class="btn-check" name="serverFilter" id="filterInactive">
+                        <label class="btn btn-outline-secondary" for="filterInactive">Inactive</label>
+                    </div>
+                <% } %>
+            </div>
             
             <% if (guilds.length === 0) { %>
                 <div class="text-center py-5">
                     <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
                     <h4 class="text-muted mt-3">No manageable servers found</h4>
                     <p class="text-muted">You need "Manage Server" permission to see servers here.</p>
+                    <a href="<%= botInviteURL %>" class="btn btn-primary" target="_blank">
+                        <i class="bi bi-plus-circle"></i> Invite Omnia Bot
+                    </a>
                 </div>
             <% } else { %>
-                <div class="row g-4">
+                <div class="row g-4" id="serverGrid">
                     <% guilds.forEach(guild => { %>
-                        <div class="col-md-6 col-lg-4">
+                        <div class="col-md-6 col-lg-4 server-item" data-status="<%= guild.botInGuild ? 'active' : 'inactive' %>">
                             <%- include('partials/guild-card', { guild: guild, botInviteURL: botInviteURL }) %>
                         </div>
                     <% }); %>
@@ -56,5 +76,30 @@
         </div>
     </div>
 </div>
+
+<script>
+// Server filtering
+document.addEventListener('DOMContentLoaded', function() {
+    const filterButtons = document.querySelectorAll('input[name="serverFilter"]');
+    const serverItems = document.querySelectorAll('.server-item');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('change', function() {
+            const filter = this.id.replace('filter', '').toLowerCase();
+            
+            serverItems.forEach(item => {
+                const status = item.dataset.status;
+                
+                if (filter === 'all' || status === filter) {
+                    item.style.display = 'block';
+                    item.style.animation = 'fadeIn 0.3s ease';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+});
+</script>
 
 <%- include('partials/footer', { botInviteURL: botInviteURL }) %>

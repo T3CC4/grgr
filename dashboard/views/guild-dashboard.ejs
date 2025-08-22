@@ -1,6 +1,6 @@
+<!-- dashboard/views/guild-dashboard.ejs - UNIFIED VERSION -->
 <%- include('partials/header', { 
-    title: guild.name + ' - Dashboard',
-    styles: '<style>.sidebar { min-height: calc(100vh - 56px); background: #f8f9fa; } .guild-icon-large { width: 80px; height: 80px; border-radius: 50%; }</style>'
+    title: guild.name + ' - ' + (section ? section.charAt(0).toUpperCase() + section.slice(1) : 'Dashboard')
 }) %>
 
 <%- include('partials/navbar', { user: user, activeTab: 'dashboard', fluid: true }) %>
@@ -9,152 +9,344 @@
     <div class="row">
         <%- include('partials/guild-sidebar', { 
             guild: guild, 
-            activeSection: typeof activeSection !== 'undefined' ? activeSection : 'general' 
+            activeSection: section || 'general'
         }) %>
         
         <!-- Main content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Server Configuration</h1>
-                <p class="text-muted">Configure the bot for <strong><%= guild.name %></strong></p>
+                <h1 class="h2">
+                    <% if (section) { %>
+                        <%= section.charAt(0).toUpperCase() + section.slice(1).replace('_', ' ') %> Settings
+                    <% } else { %>
+                        Server Overview
+                    <% } %>
+                </h1>
+                <p class="text-muted">
+                    <% if (section) { %>
+                        Configure <%= section %> settings for <strong><%= guild.name %></strong>
+                    <% } else { %>
+                        Manage <strong><%= guild.name %></strong> with Omnia Bot
+                    <% } %>
+                </p>
             </div>
 
-            <!-- Alert for save status -->
+            <!-- Alert container -->
             <div id="alertContainer"></div>
 
             <!-- Dynamic content based on section -->
-            <% if (typeof section !== 'undefined') { %>
-                <%- include('sections/' + section, { guild: guild, config: config, commands: commands }) %>
-            <% } else { %>
+            <% if (!section || section === 'general' || section === 'overview') { %>
                 <%- include('sections/general', { guild: guild, config: config }) %>
+            <% } else { %>
+                <% try { %>
+                    <%- include('sections/' + section, { 
+                        guild: guild, 
+                        config: config, 
+                        commands: typeof commands !== 'undefined' ? commands : []
+                    }) %>
+                <% } catch(e) { %>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        Section "<%= section %>" not found or under construction
+                    </div>
+                <% } %>
             <% } %>
         </main>
     </div>
 </div>
 
-<%- include('partials/footer', {
-    scripts: `
-    <script>
-        const guildId = '${guild.id}';
+<!-- Unified JavaScript -->
+<script>
+const guildId = '<%= guild.id %>';
+const currentSection = '<%= section || "general" %>';
+
+// Global functions for all sections
+class GuildDashboard {
+    constructor() {
+        this.init();
+    }
+
+    async init() {
+        // Load data based on section
+        if (['welcome', 'moderation', 'logs'].includes(currentSection)) {
+            await this.loadChannels();
+        }
+        if (['autorole'].includes(currentSection)) {
+            await this.loadRoles();
+            await this.loadChannels();
+        }
+        if (currentSection === 'custom') {
+            await this.loadCustomCommands();
+        }
         
-        // Load channels and roles on page load
-        async function loadChannels() {
-            try {
-                const response = await fetch(\`/api/guild/\${guildId}/channels\`);
-                const channels = await response.json();
+        this.setupEventListeners();
+    }
+
+    async loadChannels() {
+        try {
+            const response = await fetch(`/api/guild/${guildId}/channels`);
+            const channels = await response.json();
+            
+            document.querySelectorAll('.channel-select').forEach(select => {
+                const currentValue = select.value || select.dataset.current;
+                select.innerHTML = '<option value="">Disabled</option>';
                 
-                const selects = document.querySelectorAll('.channel-select');
-                selects.forEach(select => {
-                    select.innerHTML = '<option value="">Disabled</option>';
-                    channels.forEach(channel => {
+                // Group by category
+                const categories = {};
+                channels.forEach(channel => {
+                    const category = channel.parent || 'No Category';
+                    if (!categories[category]) categories[category] = [];
+                    categories[category].push(channel);
+                });
+                
+                Object.keys(categories).forEach(category => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = category;
+                    
+                    categories[category].forEach(channel => {
                         const option = document.createElement('option');
                         option.value = channel.id;
-                        option.textContent = \`# \${channel.name}\`;
-                        if (channel.parent) option.textContent += \` (\${channel.parent})\`;
-                        select.appendChild(option);
+                        option.textContent = `# ${channel.name}`;
+                        optgroup.appendChild(option);
                     });
+                    
+                    select.appendChild(optgroup);
                 });
                 
-                // Set current values
-                if (document.getElementById('welcomeChannel')) {
-                    document.getElementById('welcomeChannel').value = '${config.welcomeChannel || ""}';
-                }
-                if (document.getElementById('modLogChannel')) {
-                    document.getElementById('modLogChannel').value = '${config.modLogChannel || ""}';
-                }
-            } catch (error) {
-                console.error('Error loading channels:', error);
-            }
-        }
-
-        async function loadRoles() {
-            try {
-                const response = await fetch(\`/api/guild/\${guildId}/roles\`);
-                const roles = await response.json();
-                
-                const selects = document.querySelectorAll('.role-select');
-                selects.forEach(select => {
-                    select.innerHTML = '<option value="">Disabled</option>';
-                    roles.forEach(role => {
-                        const option = document.createElement('option');
-                        option.value = role.id;
-                        option.textContent = role.name;
-                        option.style.color = role.color;
-                        select.appendChild(option);
-                    });
-                });
-                
-                // Set current value
-                if (document.getElementById('autoRole')) {
-                    document.getElementById('autoRole').value = '${config.autoRole || ""}';
-                }
-            } catch (error) {
-                console.error('Error loading roles:', error);
-            }
-        }
-
-        // Save configuration
-        async function saveConfig(formId) {
-            const form = document.getElementById(formId);
-            const formData = new FormData(form);
-            const config = {};
-            
-            formData.forEach((value, key) => {
-                if (form.elements[key].type === 'checkbox') {
-                    config[key] = form.elements[key].checked;
-                } else {
-                    config[key] = value;
-                }
+                if (currentValue) select.value = currentValue;
             });
             
-            try {
-                const response = await fetch(\`/api/guild/\${guildId}/config\`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(config)
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert('success', result.message);
-                } else {
-                    showAlert('danger', result.error || 'Error saving configuration');
-                }
-            } catch (error) {
-                showAlert('danger', 'Error saving configuration');
-                console.error('Save error:', error);
-            }
+            // Set current values from config
+            this.setCurrentValues();
+        } catch (error) {
+            console.error('Error loading channels:', error);
         }
+    }
 
-        function showAlert(type, message) {
-            const alertContainer = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = \`alert alert-\${type} alert-dismissible fade show\`;
-            alert.innerHTML = \`
-                \${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            \`;
-            alertContainer.appendChild(alert);
+    async loadRoles() {
+        try {
+            const response = await fetch(`/api/guild/${guildId}/roles`);
+            const roles = await response.json();
             
-            setTimeout(() => {
-                alert.remove();
-            }, 5000);
+            document.querySelectorAll('.role-select').forEach(select => {
+                const currentValue = select.value || select.dataset.current;
+                select.innerHTML = '<option value="">Disabled</option>';
+                
+                roles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.id;
+                    option.textContent = role.name;
+                    option.style.color = role.color;
+                    select.appendChild(option);
+                });
+                
+                if (currentValue) select.value = currentValue;
+            });
+            
+            this.setCurrentValues();
+        } catch (error) {
+            console.error('Error loading roles:', error);
         }
+    }
 
-        // Attach save handlers to forms
+    setCurrentValues() {
+        // Set values from server config
+        const configMap = {
+            'welcomeChannel': '<%= config.welcomeChannel || "" %>',
+            'modLogChannel': '<%= config.modLogChannel || "" %>',
+            'autoRole': '<%= config.autoRole || "" %>'
+        };
+        
+        Object.entries(configMap).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element && value) element.value = value;
+        });
+    }
+
+    async loadCustomCommands() {
+        try {
+            const response = await fetch(`/api/guild/${guildId}/custom-commands`);
+            const commands = await response.json();
+            
+            const tbody = document.getElementById('customCommandsList');
+            if (!tbody) return;
+            
+            if (commands.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No custom commands yet</td></tr>';
+            } else {
+                tbody.innerHTML = commands.map(command => `
+                    <tr>
+                        <td><code>${command.command_name}</code></td>
+                        <td>${command.response}</td>
+                        <td>${command.created_by}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="dashboard.deleteCustomCommand('${command.command_name}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Error loading custom commands:', error);
+        }
+    }
+
+    setupEventListeners() {
+        // Form submissions
         document.querySelectorAll('form[data-config-form]').forEach(form => {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
-                saveConfig(form.id);
+                this.saveConfig(form.id);
             });
         });
 
-        // Load data on page load
-        loadChannels();
-        loadRoles();
-    </script>
-    `
-}) %>
+        // Command search and filters
+        if (currentSection === 'commands') {
+            this.setupCommandInterface();
+        }
+    }
+
+    setupCommandInterface() {
+        const searchInput = document.getElementById('commandSearch');
+        const categoryButtons = document.querySelectorAll('[data-category]');
+        const commandItems = document.querySelectorAll('.command-item');
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                commandItems.forEach(item => {
+                    const name = item.dataset.name.toLowerCase();
+                    const description = item.querySelector('.text-muted').textContent.toLowerCase();
+                    item.style.display = (name.includes(searchTerm) || description.includes(searchTerm)) ? 'block' : 'none';
+                });
+            });
+        }
+
+        categoryButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                categoryButtons.forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+                
+                const category = button.dataset.category;
+                commandItems.forEach(item => {
+                    item.style.display = (category === 'all' || item.dataset.category === category) ? 'block' : 'none';
+                });
+            });
+        });
+    }
+
+    async saveConfig(formId) {
+        const form = document.getElementById(formId);
+        const formData = new FormData(form);
+        const config = {};
+        
+        formData.forEach((value, key) => {
+            config[key] = form.elements[key].type === 'checkbox' ? form.elements[key].checked : value;
+        });
+        
+        // Add unchecked checkboxes
+        form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            if (!config.hasOwnProperty(checkbox.name)) {
+                config[checkbox.name] = false;
+            }
+        });
+        
+        try {
+            const response = await fetch(`/api/guild/${guildId}/config`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(config)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showAlert('success', result.message || 'Settings saved successfully!');
+            } else {
+                this.showAlert('danger', result.error || 'Failed to save settings');
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            this.showAlert('danger', 'An error occurred while saving settings');
+        }
+    }
+
+    showAlert(type, message) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        alertContainer.appendChild(alert);
+        
+        setTimeout(() => alert.remove(), 5000);
+    }
+
+    // Custom commands methods
+    async addCustomCommand() {
+        const name = document.getElementById('customCommandName').value;
+        const response = document.getElementById('customCommandResponse').value;
+        
+        if (!name || !response) {
+            this.showAlert('warning', 'Please fill in all fields');
+            return;
+        }
+        
+        try {
+            const result = await fetch(`/api/guild/${guildId}/custom-commands`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ commandName: name, response: response })
+            });
+            
+            const data = await result.json();
+            
+            if (data.success) {
+                this.showAlert('success', 'Custom command added successfully!');
+                document.getElementById('addCustomCommandForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('addCustomCommandModal')).hide();
+                this.loadCustomCommands();
+            } else {
+                this.showAlert('danger', data.error || 'Failed to add custom command');
+            }
+        } catch (error) {
+            console.error('Error adding custom command:', error);
+            this.showAlert('danger', 'Failed to add custom command');
+        }
+    }
+
+    async deleteCustomCommand(commandName) {
+        if (!confirm(`Are you sure you want to delete the command "${commandName}"?`)) return;
+        
+        try {
+            const response = await fetch(`/api/guild/${guildId}/custom-commands/${commandName}`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showAlert('success', 'Custom command deleted successfully!');
+                this.loadCustomCommands();
+            } else {
+                this.showAlert('danger', 'Failed to delete custom command');
+            }
+        } catch (error) {
+            console.error('Error deleting custom command:', error);
+            this.showAlert('danger', 'Failed to delete custom command');
+        }
+    }
+}
+
+// Initialize dashboard
+const dashboard = new GuildDashboard();
+
+// Global functions for backward compatibility
+window.addCustomCommand = () => dashboard.addCustomCommand();
+window.deleteCustomCommand = (name) => dashboard.deleteCustomCommand(name);
+</script>
+
+<%- include('partials/footer') %>

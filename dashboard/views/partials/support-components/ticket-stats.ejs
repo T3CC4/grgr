@@ -1,0 +1,18 @@
+<div class="row mb-4">
+    <% const statCards = [
+        { value: stats.total, label: 'Total Tickets', color: 'primary' },
+        { value: stats.open, label: 'Open', color: 'success' },
+        { value: stats.in_progress, label: 'In Progress', color: 'warning' },
+        { value: stats.closed, label: 'Closed', color: 'secondary' }
+    ] %>
+    <% statCards.forEach(stat => { %>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-<%= stat.color %>"><%= stat.value %></h3>
+                    <p class="text-muted mb-0"><%= stat.label %></p>
+                </div>
+            </div>
+        </div>
+    <% }) %>
+</div>

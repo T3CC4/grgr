@@ -1,0 +1,262 @@
+<!-- dashboard/views/commands-list.ejs -->
+<%- include('partials/header', { title: 'Commands - Omnia Bot' }) %>
+<%- include('partials/navbar', { user: user, activeTab: 'commands' }) %>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Omnia Bot Commands</h1>
+            <p class="lead">All available slash commands</p>
+        </div>
+        <% if (user) { %>
+            <a href="/dashboard" class="btn btn-primary">
+                <i class="bi bi-gear"></i> Manage Commands
+            </a>
+        <% } else { %>
+            <a href="/auth/discord" class="btn btn-outline-primary">
+                <i class="bi bi-discord"></i> Login to Manage
+            </a>
+        <% } %>
+    </div>
+    
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="commandSearch" placeholder="Search commands...">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <select class="form-select" id="categoryFilter">
+                <option value="">All Categories</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Commands Container -->
+    <div id="commandsContainer">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading commands...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading commands from bot...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadCommands();
+    setupFilters();
+});
+
+async function loadCommands() {
+    try {
+        // Use relative URL - dashboard will proxy to bot API
+        console.log('Loading commands from:', '/api/bot/commands');
+        const response = await fetch('/api/bot/commands');
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
+        }
+        
+        const commands = await response.json();
+        console.log('Loaded commands:', commands);
+        
+        if (commands && commands.length > 0) {
+            renderCommands(commands);
+            populateCategoryFilter(commands);
+        } else {
+            console.warn('No commands received');
+            showNoCommands();
+        }
+    } catch (error) {
+        console.error('Error loading commands:', error);
+        showError(error.message);
+    }
+}
+
+function renderCommands(commands) {
+    // Group commands by category
+    const categories = {};
+    commands.forEach(cmd => {
+        const category = cmd.category || 'Other';
+        if (!categories[category]) categories[category] = [];
+        categories[category].push(cmd);
+    });
+
+    let html = '<div class="row">';
+    
+    // Sidebar with categories
+    html += '<div class="col-md-3">';
+    html += '<div class="list-group sticky-top" style="top: 20px;">';
+    
+    Object.keys(categories).forEach(category => {
+        const icon = getCategoryIcon(category);
+        html += `<a href="#${category.toLowerCase()}" class="list-group-item list-group-item-action">
+            ${icon} ${category} <span class="badge bg-secondary">${categories[category].length}</span>
+        </a>`;
+    });
+    
+    html += '</div></div>';
+    
+    // Commands content
+    html += '<div class="col-md-9">';
+    
+    Object.entries(categories).forEach(([category, cmds]) => {
+        const icon = getCategoryIcon(category);
+        html += `
+            <div id="${category.toLowerCase()}" class="mb-5" data-category="${category}">
+                <h3>${icon} ${category} Commands</h3>
+                <div class="row g-3">
+        `;
+        
+        cmds.forEach(cmd => {
+            html += `
+                <div class="col-md-6 command-card" data-name="${cmd.name}" data-category="${category}">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <code>/${cmd.name}</code>
+                                <span class="badge bg-secondary float-end">${cmd.cooldown || 3}s</span>
+                            </h6>
+                            <p class="card-text text-muted">${cmd.description}</p>
+                            ${cmd.options && cmd.options.length > 0 ? renderOptions(cmd.options) : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div></div>';
+    });
+    
+    html += '</div></div>';
+    
+    document.getElementById('commandsContainer').innerHTML = html;
+}
+
+function renderOptions(options) {
+    let html = '<div class="mt-2"><small class="text-muted"><strong>Options:</strong><br>';
+    options.forEach(option => {
+        const required = option.required ? '<span class="text-danger">*</span>' : '';
+        html += `<code>${option.name}${required}</code> - ${option.description}<br>`;
+    });
+    html += '</small></div>';
+    return html;
+}
+
+function populateCategoryFilter(commands) {
+    const categories = [...new Set(commands.map(cmd => cmd.category || 'Other'))];
+    const select = document.getElementById('categoryFilter');
+    
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        select.appendChild(option);
+    });
+}
+
+function setupFilters() {
+    const searchInput = document.getElementById('commandSearch');
+    const categoryFilter = document.getElementById('categoryFilter');
+    
+    searchInput.addEventListener('input', filterCommands);
+    categoryFilter.addEventListener('change', filterCommands);
+}
+
+function filterCommands() {
+    const searchTerm = document.getElementById('commandSearch').value.toLowerCase();
+    const selectedCategory = document.getElementById('categoryFilter').value;
+    
+    const commandCards = document.querySelectorAll('.command-card');
+    const categorySections = document.querySelectorAll('[data-category]');
+    
+    commandCards.forEach(card => {
+        const name = card.dataset.name.toLowerCase();
+        const category = card.dataset.category;
+        const description = card.querySelector('.card-text').textContent.toLowerCase();
+        
+        const matchesSearch = !searchTerm || 
+            name.includes(searchTerm) || 
+            description.includes(searchTerm);
+        
+        const matchesCategory = !selectedCategory || category === selectedCategory;
+        
+        card.style.display = (matchesSearch && matchesCategory) ? 'block' : 'none';
+    });
+    
+    // Hide empty category sections
+    categorySections.forEach(section => {
+        const visibleCards = section.querySelectorAll('.command-card[style*="block"], .command-card:not([style*="none"])');
+        section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+    });
+}
+
+function getCategoryIcon(category) {
+    const icons = {
+        'moderation': '<i class="bi bi-shield text-danger"></i>',
+        'utility': '<i class="bi bi-tools text-primary"></i>',
+        'fun': '<i class="bi bi-emoji-smile text-warning"></i>',
+        'music': '<i class="bi bi-music-note text-success"></i>',
+        'admin': '<i class="bi bi-gear text-secondary"></i>',
+        'other': '<i class="bi bi-folder text-muted"></i>'
+    };
+    return icons[category.toLowerCase()] || icons.other;
+}
+
+function showNoCommands() {
+    document.getElementById('commandsContainer').innerHTML = `
+        <div class="text-center py-5">
+            <i class="bi bi-exclamation-circle text-warning" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">No Commands Available</h4>
+            <p class="text-muted">The bot might not be running or no commands are loaded.</p>
+        </div>
+    `;
+}
+
+function showError(errorMsg = 'Unknown error') {
+    document.getElementById('commandsContainer').innerHTML = `
+        <div class="text-center py-5">
+            <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+            <h4 class="mt-3">Failed to Load Commands</h4>
+            <p class="text-muted">Error: ${errorMsg}</p>
+            <p class="text-muted">Make sure the bot is running on port 3001</p>
+            <button class="btn btn-primary" onclick="loadCommands()">
+                <i class="bi bi-arrow-clockwise"></i> Retry
+            </button>
+        </div>
+    `;
+}
+</script>
+
+<style>
+.command-card {
+    transition: transform 0.2s ease;
+}
+
+.command-card:hover {
+    transform: translateY(-2px);
+}
+
+.list-group-item {
+    transition: background-color 0.2s ease;
+}
+
+.sticky-top {
+    top: 80px !important;
+}
+
+@media (max-width: 768px) {
+    .sticky-top {
+        position: relative !important;
+        top: 0 !important;
+    }
+}
+</style>
+
+<%- include('partials/footer') %>
