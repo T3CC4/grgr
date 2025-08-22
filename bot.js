@@ -1,11 +1,10 @@
-// bot.js - Simplified Main Bot File
+// bot.js - Updated with Team API Extensions
 const { Client, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 
 // Services
 const { GuildService } = require('./database/Repository');
 const CommandManager = require('./managers/CommandManager');
-const { createBotAPI } = require('./services/BotAPI');
 const EventManager = require('./managers/EventManager');
 
 class OmniaBot {
@@ -15,7 +14,8 @@ class OmniaBot {
                 GatewayIntentBits.Guilds,
                 GatewayIntentBits.GuildMessages,
                 GatewayIntentBits.MessageContent,
-                GatewayIntentBits.GuildMembers
+                GatewayIntentBits.GuildMembers,
+                GatewayIntentBits.GuildPresences // Added for team member status
             ]
         });
 
@@ -56,7 +56,8 @@ class OmniaBot {
                 isStaff: () => false,
                 canManageTickets: () => false,
                 getRole: () => 'User',
-                getRoleColor: () => 'secondary'
+                getRoleColor: () => 'secondary',
+                getAllStaffIds: () => []
             };
         }
 
@@ -185,6 +186,173 @@ class OmniaBot {
             }
         });
 
+        // User endpoint for team data
+        api.get('/api/bot/user/:userId', async (req, res) => {
+            try {
+                const userId = req.params.userId;
+                console.log(`[API] Fetching user: ${userId}`);
+                
+                const user = await this.client.users.fetch(userId);
+                if (!user) {
+                    return res.status(404).json({ error: 'User not found' });
+                }
+                
+                const userData = {
+                    id: user.id,
+                    username: user.username,
+                    discriminator: user.discriminator,
+                    tag: user.tag,
+                    avatarURL: user.displayAvatarURL({ size: 256, dynamic: true }),
+                    bot: user.bot,
+                    createdAt: user.createdAt.toISOString()
+                };
+                
+                console.log(`[API] Returning user data for: ${user.tag}`);
+                res.json(userData);
+            } catch (error) {
+                console.error(`[API] User fetch error for ${req.params.userId}:`, error);
+                res.status(404).json({ 
+                    error: 'User not found',
+                    details: error.message 
+                });
+            }
+        });
+
+        // Guild member endpoint for team data
+        api.get('/api/bot/guild/:guildId/member/:userId', async (req, res) => {
+            try {
+                const { guildId, userId } = req.params;
+                console.log(`[API] Fetching member: ${userId} in guild: ${guildId}`);
+                
+                const guild = this.client.guilds.cache.get(guildId);
+                if (!guild) {
+                    return res.status(404).json({ error: 'Guild not found' });
+                }
+                
+                const member = guild.members.cache.get(userId);
+                if (!member) {
+                    // Try to fetch member if not in cache
+                    try {
+                        const fetchedMember = await guild.members.fetch(userId);
+                        if (fetchedMember) {
+                            const memberData = {
+                                id: fetchedMember.id,
+                                username: fetchedMember.user.username,
+                                discriminator: fetchedMember.user.discriminator,
+                                tag: fetchedMember.user.tag,
+                                displayName: fetchedMember.displayName,
+                                avatarURL: fetchedMember.displayAvatarURL({ size: 256, dynamic: true }),
+                                joinedAt: fetchedMember.joinedAt?.toISOString() || null,
+                                roles: fetchedMember.roles.cache.map(role => ({
+                                    id: role.id,
+                                    name: role.name,
+                                    color: role.hexColor
+                                })),
+                                presence: {
+                                    status: fetchedMember.presence?.status || 'offline',
+                                    activities: fetchedMember.presence?.activities || []
+                                }
+                            };
+                            
+                            console.log(`[API] Returning member data for: ${fetchedMember.user.tag}`);
+                            return res.json(memberData);
+                        }
+                    } catch (fetchError) {
+                        console.warn(`[API] Could not fetch member ${userId} from guild ${guildId}:`, fetchError.message);
+                    }
+                    
+                    return res.status(404).json({ error: 'Member not found in guild' });
+                }
+                
+                const memberData = {
+                    id: member.id,
+                    username: member.user.username,
+                    discriminator: member.user.discriminator,
+                    tag: member.user.tag,
+                    displayName: member.displayName,
+                    avatarURL: member.displayAvatarURL({ size: 256, dynamic: true }),
+                    joinedAt: member.joinedAt?.toISOString() || null,
+                    roles: member.roles.cache.map(role => ({
+                        id: role.id,
+                        name: role.name,
+                        color: role.hexColor
+                    })),
+                    presence: {
+                        status: member.presence?.status || 'offline',
+                        activities: member.presence?.activities || []
+                    }
+                };
+                
+                console.log(`[API] Returning member data for: ${member.user.tag}`);
+                res.json(memberData);
+            } catch (error) {
+                console.error(`[API] Member fetch error for ${req.params.userId} in ${req.params.guildId}:`, error);
+                res.status(404).json({ 
+                    error: 'Member not found',
+                    details: error.message 
+                });
+            }
+        });
+
+        // Bulk team members endpoint (more efficient for team page)
+        api.post('/api/bot/team/members', async (req, res) => {
+            try {
+                const { userIds } = req.body;
+                
+                if (!Array.isArray(userIds) || userIds.length === 0) {
+                    return res.status(400).json({ error: 'userIds array is required' });
+                }
+                
+                console.log(`[API] Fetching ${userIds.length} team members...`);
+                
+                const teamMembers = [];
+                
+                for (const userId of userIds) {
+                    try {
+                        const user = await this.client.users.fetch(userId);
+                        if (user) {
+                            // Try to find the user in any guild for presence data
+                            let bestMemberData = null;
+                            
+                            for (const guild of this.client.guilds.cache.values()) {
+                                const member = guild.members.cache.get(userId);
+                                if (member) {
+                                    bestMemberData = {
+                                        displayName: member.displayName,
+                                        status: member.presence?.status || 'offline',
+                                        activities: member.presence?.activities || [],
+                                        joinedAt: member.joinedAt?.toISOString() || null
+                                    };
+                                    break; // Use data from first guild found
+                                }
+                            }
+                            
+                            teamMembers.push({
+                                id: user.id,
+                                username: user.username,
+                                discriminator: user.discriminator,
+                                tag: user.tag,
+                                displayName: bestMemberData?.displayName || user.username,
+                                avatarURL: user.displayAvatarURL({ size: 256, dynamic: true }),
+                                status: bestMemberData?.status || 'offline',
+                                activities: bestMemberData?.activities || [],
+                                joinedAt: bestMemberData?.joinedAt || null
+                            });
+                        }
+                    } catch (userError) {
+                        console.warn(`[API] Could not fetch team member ${userId}:`, userError.message);
+                        // Skip users that can't be fetched - no fake data
+                    }
+                }
+                
+                console.log(`[API] Returning ${teamMembers.length} team members`);
+                res.json(teamMembers);
+            } catch (error) {
+                console.error('[API] Team members error:', error);
+                res.status(500).json({ error: 'Failed to load team members' });
+            }
+        });
+
         // Stats endpoint
         api.get('/api/bot/stats', (req, res) => {
             try {
@@ -206,13 +374,28 @@ class OmniaBot {
             }
         });
 
+        // Health check endpoint
+        api.get('/health', (req, res) => {
+            res.json({ 
+                status: 'online', 
+                timestamp: new Date().toISOString(),
+                uptime: process.uptime(),
+                guilds: this.client.guilds.cache.size,
+                users: this.client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)
+            });
+        });
+
         // Root endpoint for testing
         api.get('/', (req, res) => {
             res.json({ 
                 message: 'Bot API is running',
                 endpoints: [
                     '/api/bot/commands',
-                    '/api/bot/guilds', 
+                    '/api/bot/guilds',
+                    '/api/bot/stats',
+                    '/api/bot/user/:userId',
+                    '/api/bot/guild/:guildId/member/:userId',
+                    '/api/bot/team/members (POST)',
                     '/health'
                 ]
             });
@@ -225,6 +408,10 @@ class OmniaBot {
             console.log(`📋 Available endpoints:`);
             console.log(`   - http://localhost:${port}/api/bot/commands`);
             console.log(`   - http://localhost:${port}/api/bot/guilds`);
+            console.log(`   - http://localhost:${port}/api/bot/stats`);
+            console.log(`   - http://localhost:${port}/api/bot/user/:userId`);
+            console.log(`   - http://localhost:${port}/api/bot/guild/:guildId/member/:userId`);
+            console.log(`   - http://localhost:${port}/api/bot/team/members (POST)`);
             console.log(`   - http://localhost:${port}/health`);
         });
 
@@ -256,4 +443,4 @@ process.on('unhandledRejection', (error) => {
     console.error('Unhandled promise rejection:', error);
 });
 
-module.exports = bot;
+module.exports = bot

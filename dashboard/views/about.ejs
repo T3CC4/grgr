@@ -1,5 +1,8 @@
-<!-- dashboard/views/about.ejs -->
-<%- include('partials/header', { title: 'About - Omnia Bot' }) %>
+<!-- dashboard/views/about.ejs - WITH GROWTH CHART -->
+<%- include('partials/header', { 
+    title: 'About - Omnia Bot',
+    styles: '<link rel="stylesheet" href="/css/about.css">'
+}) %>
 <%- include('partials/navbar', { user: user, activeTab: 'about' }) %>
 
 <!-- Hero Section -->
@@ -9,26 +12,24 @@
             <div class="col-lg-6">
                 <h1 class="display-4 fw-bold mb-4">About Omnia</h1>
                 <p class="lead mb-4">From the Latin word meaning "everything" - Omnia Bot is designed to be your complete Discord server solution.</p>
-                <div class="d-flex gap-3">
+                <div class="d-flex gap-3" id="heroStats" style="display: none !important;">
                     <div class="text-center">
-                        <div class="fw-bold fs-4" id="liveStats">-</div>
+                        <div class="fw-bold fs-4" id="liveStats">Loading...</div>
                         <small>Servers</small>
                     </div>
                     <div class="text-center">
-                        <div class="fw-bold fs-4" id="liveUsers">-</div>
+                        <div class="fw-bold fs-4" id="liveUsers">Loading...</div>
                         <small>Users</small>
                     </div>
                     <div class="text-center">
-                        <div class="fw-bold fs-4" id="liveUptime">-</div>
+                        <div class="fw-bold fs-4" id="liveUptime">Loading...</div>
                         <small>Uptime</small>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="text-center">
-                    <div class="bg-white bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 200px; height: 200px;">
-                        <i class="bi bi-infinity display-1"></i>
-                    </div>
+                    <img src="/images/favicon.ico" alt="Omnia Bot" class="bot-logo mb-3" style="width: 150px; height: 150px; border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                 </div>
             </div>
         </div>
@@ -77,8 +78,75 @@
     </div>
 </section>
 
-<!-- Technology Stack -->
+<!-- Growth Chart Section -->
 <section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-4">Growth & Performance</h2>
+            <p class="lead text-muted">Real-time monitoring of our bot's performance and community growth.</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0">Live Growth Metrics</h5>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <input type="radio" class="btn-check" name="chartPeriod" id="period24h" checked>
+                                <label class="btn btn-outline-primary" for="period24h">24H</label>
+                                
+                                <input type="radio" class="btn-check" name="chartPeriod" id="period7d">
+                                <label class="btn btn-outline-primary" for="period7d">7D</label>
+                                
+                                <input type="radio" class="btn-check" name="chartPeriod" id="period30d">
+                                <label class="btn btn-outline-primary" for="period30d">30D</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart Container -->
+                        <div style="height: 400px; position: relative;">
+                            <canvas id="growthChart" width="100%" height="400"></canvas>
+                            
+                            <!-- Loading overlay -->
+                            <div id="chartLoading" class="position-absolute top-50 start-50 translate-middle text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading chart...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Loading growth data...</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart Legend -->
+                        <div class="row mt-4">
+                            <div class="col-md-4 text-center">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div class="chart-legend-color bg-primary me-2"></div>
+                                    <span class="text-muted">Servers</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div class="chart-legend-color bg-success me-2"></div>
+                                    <span class="text-muted">Users (in thousands)</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <div class="chart-legend-color bg-warning me-2"></div>
+                                    <span class="text-muted">Uptime %</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Technology Stack -->
+<section class="py-5">
     <div class="container">
         <div class="row">
             <div class="col-lg-6">
@@ -165,22 +233,55 @@
 </section>
 
 <!-- Team Section -->
-<section class="py-5">
+<section class="py-5 bg-light">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold mb-4">Development Team</h2>
-            <p class="lead text-muted">Passionate developers committed to creating the best Discord bot experience.</p>
+            <h2 class="display-5 fw-bold mb-4">Meet Our Team</h2>
+            <p class="lead text-muted">The dedicated team behind Omnia Bot, working to make Discord communities better.</p>
+            
+            <!-- Team Stats -->
+            <div class="row justify-content-center mb-4">
+                <div class="col-md-8">
+                    <div class="team-stats p-3 text-white d-flex justify-content-around">
+                        <div class="text-center">
+                            <div class="h5 mb-1" id="totalStaff">Loading...</div>
+                            <small>Team Members</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="h5 mb-1" id="onlineStaff">Loading...</div>
+                            <small>Online Now</small>
+                        </div>
+                        <div class="text-center">
+                            <div class="h5 mb-1">24/7</div>
+                            <small>Support</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
-        <div class="row justify-content-center">
+        <!-- Team Members -->
+        <div class="row" id="teamContainer">
+            <!-- Team members will be loaded here by JavaScript -->
+            <div class="col-12 text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading team...</span>
+                </div>
+                <p class="mt-3 text-muted">Loading team members...</p>
+            </div>
+        </div>
+        
+        <!-- Fallback if team loading fails -->
+        <div class="row" id="teamFallback" style="display: none;">
             <div class="col-md-6 col-lg-4">
-                <div class="card border-0 shadow-sm text-center">
+                <div class="card team-member text-center">
                     <div class="card-body p-4">
-                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <i class="bi bi-person-fill fs-2"></i>
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                            <i class="bi bi-people-fill fs-2"></i>
                         </div>
                         <h5 class="fw-bold">Development Team</h5>
-                        <p class="text-muted mb-3">Full-stack developers specializing in Discord bot development and web technologies.</p>
+                        <span class="badge role-badge role-owner text-white mb-3">Team</span>
+                        <p class="text-muted mb-3">Team information is temporarily unavailable.</p>
                         <div class="d-flex justify-content-center gap-2">
                             <a href="#" class="btn btn-outline-primary btn-sm">
                                 <i class="bi bi-github"></i>
@@ -196,8 +297,57 @@
     </div>
 </section>
 
+<!-- Features Showcase -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-4">What Makes Omnia Special</h2>
+            <p class="lead text-muted">Discover the features that set us apart from other Discord bots.</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                        <i class="bi bi-lightning-charge text-primary fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">Lightning Fast</h5>
+                    <p class="text-muted mb-0">Optimized for speed with response times under 100ms for most commands.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                        <i class="bi bi-shield-check text-success fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">Secure & Safe</h5>
+                    <p class="text-muted mb-0">Built with security best practices and regular security audits.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                        <i class="bi bi-people text-warning fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">Community Driven</h5>
+                    <p class="text-muted mb-0">Features requested and tested by our amazing community members.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                        <i class="bi bi-headset text-info fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold">24/7 Support</h5>
+                    <p class="text-muted mb-0">Round-the-clock support from our dedicated team whenever you need help.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Support & Contact -->
-<section class="py-5 bg-primary text-white">
+<section class="py-5">
     <div class="container">
         <div class="row">
             <div class="col-lg-6">
@@ -207,48 +357,158 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="d-flex">
-                            <i class="bi bi-headset text-white me-3 fs-4"></i>
+                            <i class="bi bi-headset text-primary me-3 fs-4"></i>
                             <div>
                                 <h6 class="fw-bold">24/7 Support</h6>
-                                <small class="opacity-75">Always available when you need us</small>
+                                <small class="text-muted">Always available when you need us</small>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex">
-                            <i class="bi bi-chat-dots text-white me-3 fs-4"></i>
+                            <i class="bi bi-chat-dots text-success me-3 fs-4"></i>
                             <div>
                                 <h6 class="fw-bold">Discord Server</h6>
-                                <small class="opacity-75">Join our community</small>
+                                <small class="text-muted">Join our community</small>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex">
-                            <i class="bi bi-file-text text-white me-3 fs-4"></i>
+                            <i class="bi bi-file-text text-info me-3 fs-4"></i>
                             <div>
                                 <h6 class="fw-bold">Documentation</h6>
-                                <small class="opacity-75">Comprehensive guides</small>
+                                <small class="text-muted">Comprehensive guides</small>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex">
-                            <i class="bi bi-ticket-perforated text-white me-3 fs-4"></i>
+                            <i class="bi bi-ticket-perforated text-warning me-3 fs-4"></i>
                             <div>
                                 <h6 class="fw-bold">Ticket System</h6>
-                                <small class="opacity-75">Direct support channel</small>
+                                <small class="text-muted">Direct support channel</small>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6">
-                <div class="bg-white bg-opacity-10 rounded p-4">
+                <div class="bg-light rounded p-4">
                     <h5 class="fw-bold mb-3">Get Support</h5>
                     <div class="d-grid gap-2">
                         <% if (user) { %>
-                            <a href="/support" class="btn btn-light">
+                            <a href="/support" class="btn btn-primary">
                                 <i class="bi bi-ticket-perforated"></i> Create Support Ticket
                             </a>
-                        <%
+                        <% } else { %>
+                            <a href="/auth/discord" class="btn btn-primary">
+                                <i class="bi bi-discord"></i> Login for Support
+                            </a>
+                        <% } %>
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="bi bi-discord"></i> Join Discord Server
+                        </a>
+                        <a href="/commands-list" class="btn btn-outline-secondary">
+                            <i class="bi bi-book"></i> View Documentation
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Quick Links -->
+                <div class="mt-4">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <a href="/features" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="bi bi-star"></i> Features
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="/commands-list" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="bi bi-terminal"></i> Commands
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <% if (typeof botInviteURL !== 'undefined') { %>
+                                <a href="<%= botInviteURL %>" class="btn btn-outline-success btn-sm w-100" target="_blank">
+                                    <i class="bi bi-plus-circle"></i> Invite Bot
+                                </a>
+                            <% } else { %>
+                                <a href="#" class="btn btn-outline-success btn-sm w-100">
+                                    <i class="bi bi-plus-circle"></i> Invite Bot
+                                </a>
+                            <% } %>
+                        </div>
+                        <div class="col-6">
+                            <% if (user) { %>
+                                <a href="/dashboard" class="btn btn-outline-info btn-sm w-100">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            <% } else { %>
+                                <a href="/auth/discord" class="btn btn-outline-info btn-sm w-100">
+                                    <i class="bi bi-box-arrow-in-right"></i> Login
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 bg-gradient-primary text-white">
+    <div class="container text-center">
+        <h2 class="display-5 fw-bold mb-4">Ready to Transform Your Server?</h2>
+        <p class="lead mb-4">Join thousands of Discord communities already using Omnia Bot to enhance their server experience.</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <% if (typeof botInviteURL !== 'undefined') { %>
+                <a href="<%= botInviteURL %>" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Add to Your Server
+                </a>
+            <% } else { %>
+                <a href="#" class="btn btn-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Add to Your Server
+                </a>
+            <% } %>
+            <% if (!user) { %>
+                <a href="/auth/discord" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-discord"></i> Get Started
+                </a>
+            <% } else { %>
+                <a href="/dashboard" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-speedometer2"></i> Manage Servers
+                </a>
+            <% } %>
+        </div>
+        
+        <!-- Trust indicators -->
+        <div class="row mt-5 pt-4 border-top border-white border-opacity-25">
+            <div class="col-md-4">
+                <i class="bi bi-shield-check opacity-75 fs-3 mb-2"></i>
+                <h6 class="fw-bold">Secure & Reliable</h6>
+                <small class="opacity-75">Trusted by thousands</small>
+            </div>
+            <div class="col-md-4">
+                <i class="bi bi-award opacity-75 fs-3 mb-2"></i>
+                <h6 class="fw-bold">Premium Quality</h6>
+                <small class="opacity-75">Professional grade bot</small>
+            </div>
+            <div class="col-md-4">
+                <i class="bi bi-heart opacity-75 fs-3 mb-2"></i>
+                <h6 class="fw-bold">Community Loved</h6>
+                <small class="opacity-75">5-star rating average</small>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Chart.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<!-- JavaScript for Live Stats and Chart -->
+<script src="/js/about.js"></script>
+
+<%- include('partials/footer', { botInviteURL: typeof botInviteURL !== 'undefined' ? botInviteURL : '#' }) %>

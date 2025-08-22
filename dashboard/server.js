@@ -1,4 +1,4 @@
-// dashboard/server.js - SIMPLIFIED VERSION
+// dashboard/server.js - PRODUCTION VERSION (NO MOCK DATA)
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
@@ -22,24 +22,7 @@ try {
     staff = require('../config/staff');
 } catch (error) {
     console.error('Service initialization error:', error.message);
-    
-    // Create fallback implementations
-    database = {
-        getGuildConfig: async (guildId) => ({ guild_id: guildId, prefix: '!' }),
-        saveGuildConfig: async () => true
-    };
-    ticketService = {
-        getUserTickets: async () => [],
-        getAllTickets: async () => [],
-        getStats: async () => ({ total: 0, open: 0, in_progress: 0, closed: 0 })
-    };
-    staff = {
-        isStaff: () => false,
-        canManageTickets: () => false,
-        getRole: () => 'User',
-        getRoleColor: () => 'secondary'
-    };
-    console.log('⚠️ Using fallback services');
+    process.exit(1); // Exit instead of using fallbacks in production
 }
 
 // Middleware
@@ -90,19 +73,6 @@ passport.deserializeUser((user, done) => done(null, user));
 
 // Auth middleware
 const requireAuth = (req, res, next) => {
-    // Development mock user (remove in production!)
-    if (process.env.NODE_ENV === 'development' && process.env.MOCK_USER === 'true') {
-        req.user = {
-            id: '123456789',
-            username: 'TestUser',
-            avatar: '1234567890abcdef',
-            guilds: [
-                { id: '987654321', name: 'Test Server', permissions: 0x20, owner: true }
-            ]
-        };
-        return next();
-    }
-    
     if (req.isAuthenticated()) return next();
     res.redirect('/auth/discord');
 };
@@ -119,6 +89,280 @@ const getBotGuilds = async () => {
         return [];
     }
 };
+
+// Get bot client for team data - IMPLEMENTED TODO
+const getBotClient = async () => {
+    try {
+        // Check if bot is available and get basic info
+        const response = await axios.get(`${BOT_API_URL}/api/bot/stats`);
+        if (response.data.status === 'online') {
+            // Return a proxy object that can make API calls to the bot
+            return {
+                isAvailable: true,
+                fetchUser: async (userId) => {
+                    try {
+                        const userResponse = await axios.get(`${BOT_API_URL}/api/bot/user/${userId}`);
+                        return userResponse.data;
+                    } catch (error) {
+                        throw new Error(`Could not fetch user ${userId}: ${error.message}`);
+                    }
+                },
+                getGuildMember: async (guildId, userId) => {
+                    try {
+                        const memberResponse = await axios.get(`${BOT_API_URL}/api/bot/guild/${guildId}/member/${userId}`);
+                        return memberResponse.data;
+                    } catch (error) {
+                        return null; // User not in guild
+                    }
+                }
+            };
+        }
+        return null;
+    } catch (error) {
+        console.warn('Bot client not available:', error.message);
+        return null;
+    }
+};
+
+// Team API endpoint using staff.js with real Discord data
+app.get('/api/about/team', async (req, res) => {
+    try {
+        console.log('[TEAM API] Loading team members from staff config...');
+        
+        const allStaffIds = staff.getAllStaffIds();
+        
+        if (allStaffIds.length === 0) {
+            console.log('[TEAM API] No staff members configured');
+            return res.json({
+                members: [],
+                stats: { total: 0, online: 0, ...staff.getTeamStats() },
+                lastUpdated: new Date().toISOString(),
+                source: 'empty'
+            });
+        }
+
+        console.log(`[TEAM API] Found ${allStaffIds.length} staff members: ${allStaffIds.join(', ')}`);
+
+        // Try to use the bulk team endpoint from bot API
+        try {
+            console.log('[TEAM API] Trying bulk team endpoint...');
+            const response = await axios.post(`${BOT_API_URL}/api/bot/team/members`, {
+                userIds: allStaffIds
+            }, {
+                timeout: 10000 // 10 second timeout
+            });
+
+            if (response.data && Array.isArray(response.data)) {
+                console.log(`[TEAM API] Bulk endpoint returned ${response.data.length} members`);
+                
+                // Enhance with role data from staff config
+                const enhancedMembers = response.data.map(member => ({
+                    ...member,
+                    role: staff.getRole(member.id),
+                    bio: staff.getStaffBio(member.id, staff.getRole(member.id))
+                }));
+
+                // Sort by role hierarchy
+                const roleOrder = { 'Owner': 0, 'Admin': 1, 'Moderator': 2, 'Support': 3 };
+                enhancedMembers.sort((a, b) => {
+                    const aOrder = roleOrder[a.role] || 999;
+                    const bOrder = roleOrder[b.role] || 999;
+                    return aOrder - bOrder;
+                });
+
+                const onlineCount = enhancedMembers.filter(member => 
+                    member.status === 'online' || member.status === 'idle' || member.status === 'dnd'
+                ).length;
+
+                const teamData = {
+                    members: enhancedMembers,
+                    stats: {
+                        total: enhancedMembers.length,
+                        online: onlineCount,
+                        ...staff.getTeamStats()
+                    }
+                };
+
+                const response_data = {
+                    ...teamData,
+                    lastUpdated: new Date().toISOString(),
+                    source: 'discord_api_bulk'
+                };
+
+                console.log(`[TEAM API] Returning ${teamData.members.length} team members (bulk)`);
+                return res.json(response_data);
+            }
+        } catch (bulkError) {
+            console.warn('[TEAM API] Bulk endpoint failed:', bulkError.message);
+        }
+
+        // Fallback: Try individual user endpoints
+        try {
+            console.log('[TEAM API] Trying individual user endpoints...');
+            const teamMembers = [];
+            let onlineCount = 0;
+
+            for (const userId of allStaffIds) {
+                try {
+                    console.log(`[TEAM API] Fetching user ${userId}...`);
+                    const userResponse = await axios.get(`${BOT_API_URL}/api/bot/user/${userId}`, {
+                        timeout: 5000
+                    });
+
+                    if (userResponse.data) {
+                        const user = userResponse.data;
+                        const role = staff.getRole(userId);
+                        
+                        // Try to get member data from any guild
+                        let memberData = null;
+                        try {
+                            const guildsResponse = await axios.get(`${BOT_API_URL}/api/bot/guilds`, {
+                                timeout: 5000
+                            });
+                            
+                            if (guildsResponse.data && Array.isArray(guildsResponse.data)) {
+                                for (const guild of guildsResponse.data.slice(0, 3)) { // Check first 3 guilds only
+                                    try {
+                                        const memberResponse = await axios.get(
+                                            `${BOT_API_URL}/api/bot/guild/${guild.id}/member/${userId}`,
+                                            { timeout: 3000 }
+                                        );
+                                        if (memberResponse.data) {
+                                            memberData = memberResponse.data;
+                                            break;
+                                        }
+                                    } catch (memberError) {
+                                        // User not in this guild, continue
+                                    }
+                                }
+                            }
+                        } catch (guildError) {
+                            console.warn(`[TEAM API] Could not check guilds for ${userId}:`, guildError.message);
+                        }
+
+                        const status = memberData?.presence?.status || 'offline';
+                        if (status === 'online' || status === 'idle' || status === 'dnd') {
+                            onlineCount++;
+                        }
+
+                        teamMembers.push({
+                            id: user.id,
+                            username: user.username,
+                            discriminator: user.discriminator,
+                            tag: user.tag,
+                            displayName: memberData?.displayName || user.username,
+                            avatarURL: user.avatarURL,
+                            role: role,
+                            status: status,
+                            bio: staff.getStaffBio(userId, role)
+                        });
+                    }
+                } catch (userError) {
+                    console.warn(`[TEAM API] Could not fetch user ${userId}:`, userError.message);
+                    // Skip users that can't be fetched
+                }
+            }
+
+            if (teamMembers.length > 0) {
+                // Sort by role hierarchy
+                const roleOrder = { 'Owner': 0, 'Admin': 1, 'Moderator': 2, 'Support': 3 };
+                teamMembers.sort((a, b) => {
+                    const aOrder = roleOrder[a.role] || 999;
+                    const bOrder = roleOrder[b.role] || 999;
+                    return aOrder - bOrder;
+                });
+
+                const teamData = {
+                    members: teamMembers,
+                    stats: {
+                        total: teamMembers.length,
+                        online: onlineCount,
+                        ...staff.getTeamStats()
+                    }
+                };
+
+                const response_data = {
+                    ...teamData,
+                    lastUpdated: new Date().toISOString(),
+                    source: 'discord_api_individual'
+                };
+
+                console.log(`[TEAM API] Returning ${teamData.members.length} team members (individual)`);
+                return res.json(response_data);
+            }
+        } catch (individualError) {
+            console.warn('[TEAM API] Individual endpoints failed:', individualError.message);
+        }
+
+        // Final fallback: Return minimal data with just staff config
+        console.log('[TEAM API] Bot API not available, returning minimal data...');
+        const basicTeamData = {
+            members: allStaffIds.map((userId, index) => ({
+                id: userId,
+                username: `Staff Member ${index + 1}`,
+                discriminator: '0000',
+                tag: `Staff Member ${index + 1}#0000`,
+                displayName: `${staff.getRole(userId)} Member`,
+                avatarURL: `https://cdn.discordapp.com/embed/avatars/${index % 6}.png`,
+                role: staff.getRole(userId),
+                status: 'offline',
+                bio: staff.getStaffBio(userId, staff.getRole(userId))
+            })),
+            stats: {
+                total: allStaffIds.length,
+                online: 0,
+                ...staff.getTeamStats()
+            }
+        };
+
+        // Sort by role hierarchy
+        const roleOrder = { 'Owner': 0, 'Admin': 1, 'Moderator': 2, 'Support': 3 };
+        basicTeamData.members.sort((a, b) => {
+            const aOrder = roleOrder[a.role] || 999;
+            const bOrder = roleOrder[b.role] || 999;
+            return aOrder - bOrder;
+        });
+
+        const response_data = {
+            ...basicTeamData,
+            lastUpdated: new Date().toISOString(),
+            source: 'staff_config_only'
+        };
+
+        console.log(`[TEAM API] Returning ${basicTeamData.members.length} team members (fallback)`);
+        res.json(response_data);
+
+    } catch (error) {
+        console.error('[TEAM API] Critical error:', error);
+        res.status(500).json({ 
+            error: 'Failed to load team members',
+            details: error.message,
+            members: [],
+            stats: { total: 0, online: 0, ...staff.getTeamStats() }
+        });
+    }
+});
+
+// Add bot API routes to support team data fetching
+app.get('/api/bot/user/:userId', async (req, res) => {
+    try {
+        const apiPath = `/api/bot/user/${req.params.userId}`;
+        const response = await axios.get(`${BOT_API_URL}${apiPath}`);
+        res.json(response.data);
+    } catch (error) {
+        res.status(404).json({ error: 'User not found' });
+    }
+});
+
+app.get('/api/bot/guild/:guildId/member/:userId', async (req, res) => {
+    try {
+        const apiPath = `/api/bot/guild/${req.params.guildId}/member/${req.params.userId}`;
+        const response = await axios.get(`${BOT_API_URL}${apiPath}`);
+        res.json(response.data);
+    } catch (error) {
+        res.status(404).json({ error: 'Member not found' });
+    }
+});
 
 // Add API proxy routes BEFORE main routes
 app.get('/api/bot/*', async (req, res) => {
@@ -169,6 +413,7 @@ app.get('/features', (req, res) => {
 app.get('/about', (req, res) => {
     res.render('about', {
         user: req.user || null,
+        botInviteURL: `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=8&scope=bot%20applications.commands`,
         message: res.locals.message,
         messageType: res.locals.messageType
     });
@@ -199,7 +444,7 @@ app.get('/settings', requireAuth, async (req, res) => {
             const tickets = await ticketService.getUserTickets(req.user.id);
             userTickets = tickets.length;
         } catch (e) {
-            // Ignore if tickets don't work
+            console.warn('Could not load user tickets:', e.message);
         }
         
         res.render('settings', {
@@ -265,24 +510,6 @@ app.get('/auth/discord/callback',
     }
 );
 
-// Auth error handler
-app.get('/auth/error', (req, res) => {
-    res.render('error', {
-        error: 'Authentication failed. This might be due to rate limiting. Please try again in a few minutes.',
-        user: null
-    });
-});
-
-// Catch auth errors
-app.use('/auth/*', (err, req, res, next) => {
-    if (err.code === 'invalid_request' || err.message.includes('rate limit')) {
-        req.session.message = 'Too many login attempts. Please wait a few minutes and try again.';
-        req.session.messageType = 'warning';
-        return res.redirect('/?error=rate_limit');
-    }
-    next(err);
-});
-
 app.get('/logout', (req, res) => {
     req.logout((err) => {
         if (err) console.error('Logout error:', err);
@@ -311,4 +538,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.DASHBOARD_PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🌐 Dashboard running on http://localhost:${PORT}`);
+    console.log(`👥 Team members configured: ${staff.getAllStaffIds().length}`);
+    console.log(`📊 Staff breakdown: ${staff.owners.length} owners, ${staff.admins.length} admins, ${staff.moderators.length} moderators, ${staff.support.length} support`);
 });
