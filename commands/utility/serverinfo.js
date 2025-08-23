@@ -1,14 +1,20 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const BaseCommand = require('../BaseCommand');
 
-module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('serverinfo')
-        .setDescription('Display detailed information about the current server'),
-    
-    category: 'utility',
-    cooldown: 5,
-    
-    async execute(interaction) {
+class ServerinfoCommand extends BaseCommand {
+    constructor() {
+        super(
+            new SlashCommandBuilder()
+                .setName('serverinfo')
+                .setDescription('Display detailed information about the current server'),
+            {
+                category: 'utility',
+                cooldown: 5
+            }
+        );
+    }
+
+    async execute(interaction, services) {
         const { guild } = interaction;
         
         // Calculate server age
@@ -65,5 +71,5 @@ module.exports = {
         }
 
         await interaction.reply({ embeds: [embed] });
-    },
-};
+    }
+}

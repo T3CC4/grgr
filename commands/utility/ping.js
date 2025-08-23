@@ -1,14 +1,20 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const BaseCommand = require('../BaseCommand');
 
-module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('ping')
-        .setDescription('Check the bot\'s latency and response time'),
-    
-    category: 'utility',
-    cooldown: 5,
-    
-    async execute(interaction) {
+class PingCommand extends BaseCommand {
+    constructor() {
+        super(
+            new SlashCommandBuilder()
+                .setName('ping')
+                .setDescription('Check the bot\'s latency and response time'),
+            {
+                category: 'utility',
+                cooldown: 5
+            }
+        );
+    }
+
+    async execute(interaction, services) {
         const sent = await interaction.reply({ 
             content: '🏓 Pinging...', 
             fetchReply: true 
@@ -64,5 +70,7 @@ module.exports = {
             content: '', 
             embeds: [embed] 
         });
-    },
-};
+    }
+}
+
+module.exports = PingCommand;

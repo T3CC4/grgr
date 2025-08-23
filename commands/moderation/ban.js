@@ -51,7 +51,9 @@ class BanCommand extends BaseCommand {
         });
 
         // Log to database
-        await services.modLog.logAction(interaction.guild, 'BAN', target, interaction.user, reason);
+        if (services.modLog) {
+            await services.modLog.logAction(interaction.guild, 'BAN', target, interaction.user, reason);
+        }
 
         // Success response
         const confirmEmbed = new EmbedBuilder()

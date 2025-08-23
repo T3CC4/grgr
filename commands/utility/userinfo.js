@@ -1,19 +1,25 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const BaseCommand = require('../BaseCommand');
 
-module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('userinfo')
-        .setDescription('Display detailed information about a user')
-        .addUserOption(option =>
-            option.setName('user')
-                .setDescription('The user to get information about')
-                .setRequired(false)
-        ),
-    
-    category: 'utility',
-    cooldown: 3,
-    
-    async execute(interaction) {
+class UserinfoCommand extends BaseCommand {
+    constructor() {
+        super(
+            new SlashCommandBuilder()
+                .setName('userinfo')
+                .setDescription('Display detailed information about a user')
+                .addUserOption(option =>
+                    option.setName('user')
+                        .setDescription('The user to get information about')
+                        .setRequired(false)
+                ),
+            {
+                category: 'utility',
+                cooldown: 3
+            }
+        );
+    }
+
+    async execute(interaction, services) {
         const user = interaction.options.getUser('user') || interaction.user;
         const member = interaction.guild.members.cache.get(user.id);
         
@@ -78,46 +84,6 @@ module.exports = {
                     inline: false 
                 });
             }
-
-            // Add permissions for staff
-            if (member.permissions.has('Administrator') || 
-                member.permissions.has('ManageGuild') ||
-                member.permissions.has('ModerateMembers')) {
-                
-                const keyPerms = [];
-                if (member.permissions.has('Administrator')) keyPerms.push('Administrator');
-                if (member.permissions.has('ManageGuild')) keyPerms.push('Manage Server');
-                if (member.permissions.has('BanMembers')) keyPerms.push('Ban Members');
-                if (member.permissions.has('KickMembers')) keyPerms.push('Kick Members');
-                if (member.permissions.has('ModerateMembers')) keyPerms.push('Moderate Members');
-                if (member.permissions.has('ManageMessages')) keyPerms.push('Manage Messages');
-                
-                if (keyPerms.length > 0) {
-                    embed.addFields({
-                        name: '🛡️ Key Permissions',
-                        value: keyPerms.join(', '),
-                        inline: false
-                    });
-                }
-            }
-
-            // Add activity if present
-            if (member.presence?.activities?.length > 0) {
-                const activity = member.presence.activities[0];
-                let activityText = activity.name;
-                
-                if (activity.type === 0) activityText = `Playing ${activity.name}`;
-                else if (activity.type === 1) activityText = `Streaming ${activity.name}`;
-                else if (activity.type === 2) activityText = `Listening to ${activity.name}`;
-                else if (activity.type === 3) activityText = `Watching ${activity.name}`;
-                else if (activity.type === 5) activityText = `Competing in ${activity.name}`;
-                
-                embed.addFields({
-                    name: '🎮 Activity',
-                    value: activityText,
-                    inline: true
-                });
-            }
         } else {
             embed.addFields({
                 name: '❌ Server Member',
@@ -127,5 +93,7 @@ module.exports = {
         }
 
         await interaction.reply({ embeds: [embed] });
-    },
-};
+    }
+}
+
+module.exports = UserinfoCommand;
